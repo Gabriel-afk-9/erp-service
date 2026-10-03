@@ -1,3 +1,9 @@
+---
+> **Escopo parcial neste repositório:** somente atividades `ONE_OFF` consumidas via
+> `ActivityGateway` para validação em ATD. Atividades `PERIODIC`, inscrições e encontros
+> são responsabilidade do repositório FRQ (Fabrício) — não implementar aqui.
+---
+
 # SPEC-ATV — Institutos, projetos, atividades e participantes
 
 Versão 1.0 · Dependências: [CORE](00-foundation.md), [CAD](02-registration.md), [ACS](01-access.md) e [AUD](08-audit.md). Fontes: PRD 1.1 OBJ-03, CAP-03, RN-04/08/09 e DEC-04; ERS RF-ATV-01–08, LAC-04, RNF-MAN-01; modelagem D-01/D-02/D-03. Turmas, vagas, espera e agenda RF-ATV-09 ficam fora.

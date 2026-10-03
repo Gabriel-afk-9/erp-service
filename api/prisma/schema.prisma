@@ -1,0 +1,217 @@
+// ============================================================
+// IDENTIDADE EXTERNA — NAO ADICIONAR:
+// Activity, UserAccount
+// Sao acessadas via ActivityGateway e AuthGateway.
+// Family, Person e FamilyMembership pertencem a este repositorio
+// (frente AD, modulo CAD) e sao persistidas abaixo.
+// Ver docs/decisions/ADR-001-ad-gateways.md
+// ============================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ServiceRecordStatus {
+  COMPLETED
+  CANCELED
+}
+
+enum LocationType {
+  URBAN
+  RURAL
+}
+
+enum PersonSex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Family {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          String             @unique
+  referenceName String?            @db.VarChar(500)
+  address       String?            @db.VarChar(500)
+  neighborhood  String?            @db.VarChar(500)
+  postalCode    String?            @db.Char(8)
+  locationType  LocationType
+  contactPhone  String?            @db.VarChar(50)
+  searchText    String             @default("")
+  revision      Int                @default(1)
+  memberships   FamilyMembership[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([code])
+  @@index([neighborhood])
+  @@index([searchText])
+}
+
+model Person {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String             @db.VarChar(500)
+  birthDate      DateTime?          @db.Date
+  sex            PersonSex?
+  cpf            String?            @db.Char(11)
+  rg             String?            @db.VarChar(30)
+  occupation     String?            @db.VarChar(100)
+  educationLevel String?            @db.VarChar(100)
+  contactPhone   String?            @db.VarChar(50)
+  searchText     String             @default("")
+  revision       Int                @default(1)
+  memberships    FamilyMembership[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([name])
+  @@index([cpf])
+  @@index([searchText])
+  // CPF has no unique constraint: duplicates are resolved by merge (RF-CAD-07),
+  // never by rejecting the write. See SPEC-CAD.
+}
+
+model FamilyMembership {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  familyId              String    @db.Uuid
+  family                Family    @relation(fields: [familyId], references: [id])
+  personId              String    @db.Uuid
+  person                Person    @relation(fields: [personId], references: [id])
+  relationshipToReference String? @db.VarChar(100)
+  isReference           Boolean   @default(false)
+  validFrom             DateTime  @db.Date
+  validUntil            DateTime? @db.Date
+  revision              Int       @default(1)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([personId, validFrom])
+  @@index([familyId, validUntil])
+  // MVP-D04 (single active membership per person) and single active holder
+  // per family are enforced by partial unique indexes in the migration SQL:
+  // membership_active_person, membership_active_holder.
+}
+
+model AuditEntry {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityType String
+  entityId   String   @db.Uuid
+  action     String
+  actorId    String?
+  recordedAt DateTime @default(now()) @db.Timestamptz
+  occurredAt DateTime @db.Timestamptz
+  before     Json?
+  after      Json?
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+}
+
+model ServiceRecord {
+  id              String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  activityId      String
+  serviceTypeId   String
+  serviceTypeName String
+  familyId        String
+  personId        String?
+  membershipId    String?
+  executorName    String
+  executorRole    String
+  occurredAt      DateTime                  @db.Date
+  recordedAt      DateTime                  @default(now()) @db.Timestamptz
+  recordedBy      String
+  note            String?
+  status          ServiceRecordStatus       @default(COMPLETED)
+  revision        Int                       @default(1)
+  homeVisit       HomeVisit?
+  auditEntries    ServiceRecordAuditEntry[]
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@index([familyId, occurredAt(sort: Desc)])
+  @@index([personId])
+}
+
+model HomeVisit {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceRecordId   String        @unique @db.Uuid
+  serviceRecord     ServiceRecord @relation(fields: [serviceRecordId], references: [id])
+  observedSituation String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model ServiceRecordAuditEntry {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceRecordId String        @db.Uuid
+  serviceRecord   ServiceRecord @relation(fields: [serviceRecordId], references: [id])
+  operation       String // "CREATED" | "CANCELED" | "NOTE_CORRECTED"
+  performedBy     String
+  performedAt     DateTime      @default(now()) @db.Timestamptz
+  before          Json?
+  after           Json?
+  reason          String?
+  createdAt       DateTime      @default(now())
+
+  @@index([serviceRecordId])
+}
+
+model Category {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Unit {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockReceipt {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockLot {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockMovement {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Delivery {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DeliveryLine {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BazarTransfer {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -6,19 +6,21 @@
 - Escreva todo o código em inglês, incluindo identificadores, comentários, docstrings, descrições de testes e mensagens técnicas de erros e logs. Textos destinados ao usuário na interface usam português do Brasil.
 - Comentários explicam decisões e motivos; evite narrar o código.
 
-## Escopo vigente: MVP
+## Escopo vigente: protótipo AD (frente AD)
 
-Este projeto acompanha pessoas assistidas e suas famílias no Luz da Esperança. A família é a referência da assistência; a participação em atividades é individual. O MVP é um recorte do produto documentado, definido pelo responsável pelo projeto:
+Este repositório implementa o protótipo da frente AD do ERP Social Luz da Esperança, desenvolvido pela equipe de Gabriel. A família é a referência da assistência; a participação em atividades é individual. O protótipo é um recorte do produto documentado:
 
-| Área | Incluído no MVP | Referências da ERS |
+| Área | Incluído neste protótipo | Referências da ERS |
 | --- | --- | --- |
-| Cadastro | Pessoas, famílias, vínculos históricos, titularidade, busca e tratamento de duplicidades e dados ausentes | CAD |
-| Ficha social | Situação familiar, dados por membro, necessidades e versões da ficha, conforme seleção de campos aprovada | FIC |
-| Projetos e atividades | Organização de projetos, atividades, participantes e encontros; frequência e avaliação de aptidão familiar | ATV, FRQ, APT |
-| Consultas e relatórios | Históricos, frequência, aptidão, alcance e qualidade cadastral, somente sobre os módulos deste MVP | REL, parcialmente |
-| Acesso e auditoria | Autenticação, usuários, perfis, autorização e autoria das alterações | ACS |
+| Cadastro | Pessoas, famílias, vínculos, busca, duplicidades | CAD |
+| Acesso e auditoria | Autenticação, usuários, perfis, autorização, autoria | ACS |
+| Atendimentos pontuais | Registro, visita domiciliar, cancelamento, correção | ATD |
+| Estoque social | Itens, categorias, entradas, triagem, saldo, ajustes | EST |
+| Entregas às famílias | Registro, linhas, reversão, atualização do estoque | ENT |
+| Recebimento do Bazar | Registro, referência única, entrada no estoque | BAZ |
+| Consultas e relatórios | Somente sobre os módulos acima (REL-05, REL-06) | REL parcialmente |
 
-Atendimentos pontuais realizados, estoque social, entregas, integração com Bazar e migração do Bússola Social ficam fora deste MVP. A natureza periódica ou pontual de uma atividade pode ser representada no cadastro; isso não inclui implementar o módulo de atendimentos. Consultas e relatórios não devem introduzir módulos excluídos para completar requisitos do produto maior.
+Módulos externos (responsabilidade do repositório FRQ — Fabrício): ficha social (FIC), atividades periódicas, frequência (FRQ), aptidão (APT), migração do Bússola Social (MIG). Este repositório consome aptidão via EligibilityGateway (sempre PENDING enquanto FRQ não entregar).
 
 Captação financeira, CRM, vendas, contabilidade, prontuários clínicos, gestão da Escola Espírita e módulos próprios de voluntários ou RH também estão fora do escopo. Requisitos desejáveis e evoluções documentadas só entram mediante inclusão explícita na tarefa; o rótulo “Essencial” nos documentos não amplia o recorte acima.
 
@@ -30,8 +32,8 @@ Leia as seções relacionadas à tarefa antes de implementar ou alterar comporta
 
 - **Implementação do MVP:** [Índice das specs](docs/specs/README.md), SPEC-CORE e a spec do módulo alterado, incluindo os contratos de suas dependências. O índice registra as decisões de desenho adotadas; DEC/LAC ainda condicionam o uso real quando indicado.
 - **Escopo, regras e aceite:** [PRD 1.1](docs/PRD-ERP-Luz-da-Esperanca-v1.1.md), especialmente CAP, RN, AC e DEC pertinentes ao MVP.
-- **Funcionalidades:** [ERS](<docs/ERS — ERP Social Luz da Esperança.md>), §§3.2.1–3.2.5, 3.2.10–3.2.11 e lacunas relacionadas. Aplique apenas a parte de REL compatível com o recorte.
-- **Modelos e histórico:** [Modelagem](docs/MODELAGEM-DO-SISTEMA.md), convenções comuns, D-01–D-04, D-09–D-10 e contratos de duplicidade e relatórios. As frentes BC, FRQ e AD são divisões documentais de responsabilidade, não serviços independentes.
+- **Funcionalidades:** [ERS](<docs/ERS — ERP Social Luz da Esperança.md>), §§3.2.1, 3.2.6–3.2.9 e lacunas relacionadas. Aplique apenas a parte de REL compatível com o recorte.
+- **Modelos e histórico:** [Modelagem](docs/MODELAGEM-DO-SISTEMA.md), convenções comuns, D-01, D-05–D-08 e D-10 e contratos de duplicidade e relatórios. As frentes BC, FRQ e AD são divisões documentais de responsabilidade, não serviços independentes.
 - **Campos da ficha:** [Ficha de Cadastro de Famílias 2025](docs/ficha_cadastro_familias_2025.md). Sua presença no formulário não torna o campo obrigatório nem autoriza sua coleta digital.
 - **Fundamentação ou comparação de sistemas:** [Bibliografia](docs/Bibliografia-ERP-Social-v1.1.md) e [Pesquisa documental](docs/Pesquisa-Documental-Sistemas-ERP-Social.md). São contexto, não novas fontes de requisitos.
 
@@ -48,7 +50,7 @@ Quando uma divergência afetar a implementação, aplique essa hierarquia e regi
 
 Organize frontend, backend e código compartilhado em limites claros. Compartilhe contratos necessários, preservando modelos de persistência e segredos no backend. A interface acessa a API, nunca Prisma ou o banco diretamente. Rotas Fastify validam entradas e encaminham operações aos módulos de negócio; regras de aptidão e histórico não pertencem a componentes React.
 
-O repositório está na fase documental: ainda não há aplicações, manifestos ou scripts de execução. A base a construir e os comandos previstos estão em SPEC-CORE. Ao implementar, fixe versões compatíveis e documente os comandos realmente disponíveis; descubra os comandos de execução nos manifestos e configurações criados, sem tratar entregáveis previstos como scripts já existentes.
+O repositório implementa o protótipo da frente AD: ATD-Core implementado (RF-ATD-01–08 com exceção parcial de ATD-06), gateways in-memory para as dependências BC/FRQ, e CAD, EST, ENT, BAZ em scaffold. A base construída e os comandos disponíveis estão em SPEC-CORE e [docs/ROADMAP-AD.md](docs/ROADMAP-AD.md). Ao implementar, fixe versões compatíveis e documente os comandos realmente disponíveis; descubra os comandos de execução nos manifestos e configurações criados, sem tratar entregáveis previstos como scripts já existentes.
 
 ## Invariantes do MVP
 

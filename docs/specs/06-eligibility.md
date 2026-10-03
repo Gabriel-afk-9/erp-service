@@ -1,3 +1,11 @@
+---
+> ⚠️ **Módulo externo — repositório FRQ (Fabrício).**
+> Este repositório NÃO implementa cálculo de aptidão. Apenas o contrato de gateway
+> (interface EligibilityGateway) é normativo aqui. Implementação atual:
+> PendingEligibilityGateway (sempre PENDING — RN-18/LAC-01 — comportamento correto
+> enquanto FRQ não entregar o contrato real).
+---
+
 # SPEC-APT — Política e avaliação de aptidão familiar
 
 Versão 1.0 · Dependências: [CORE](00-foundation.md), [CAD](02-registration.md), [ATV](04-projects-activities.md), [FRQ](05-attendance.md), [ACS](01-access.md) e [AUD](08-audit.md). Fontes: PRD 1.1 OBJ-02, CAP-05, RN-02/03/13, AC-02/03, DEC-02; ERS RF-APT-01–07, RN-18, LAC-01 e AC-14; modelagem D-03. Aptidão não libera entrega nem define prioridade; esses módulos estão fora do MVP.

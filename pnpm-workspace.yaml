@@ -1,0 +1,7 @@
+# Allows postinstall build scripts for these dependencies without
+# interactive approval, so a fresh `pnpm install` works non-interactively
+# (used by scripts/setup.ps1).
+allowBuilds:
+  bcrypt: true
+  esbuild: true
+  prisma: true

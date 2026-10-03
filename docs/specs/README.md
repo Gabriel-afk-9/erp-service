@@ -1,8 +1,10 @@
-# Especificações de implementação do MVP
+# Especificações de implementação — frente AD
 
 Base documental: PRD 1.1 (18/09/2026), ERS 1.0 (24/09/2026), modelagem 1.1 (28/09/2026), ficha de famílias 2025 e decisões de escopo/stack do [AGENTS.md](../../AGENTS.md).
 
-**Situação:** contratos fechados para implementação do MVP, com as recomendações aceitas pelo responsável pelo projeto em 01/10/2026 e as derivações técnicas registradas na seção 3. As políticas institucionais ainda abertas têm comportamento configurável, desativado ou Pendente definido nas specs. Não há aplicação implementada nem testes da aplicação executados nesta entrega.
+Este repositório implementa o protótipo da frente AD (equipe de Gabriel): CAD, ACS, ATD, EST, ENT, BAZ e REL sobre dados AD. As specs 03–06 foram copiadas do repositório FRQ (Fabrício) e tratam de módulos externos — cada uma carrega um cabeçalho de escopo que prevalece sobre seu conteúdo original. As specs 09–12 são as specs normativas dos módulos AD deste repositório.
+
+**Situação:** ATD-Core implementado (RF-ATD-01–08, com ATD-06 parcial), gateways in-memory para as dependências BC/FRQ, e CAD, EST, ENT, BAZ em scaffold. Testes da aplicação: 67 casos verdes no trilho ATD/gateways. Estado detalhado por fase em [ROADMAP-AD](../ROADMAP-AD.md).
 
 ## 1. Specs e propriedade dos contratos
 
@@ -15,16 +17,32 @@ Base documental: PRD 1.1 (18/09/2026), ERS 1.0 (24/09/2026), modelagem 1.1 (28/0
 | [ATV — Projetos e atividades](04-projects-activities.md) | Institutos, projetos, naturezas, tipos e inscrições | RF-ATV-01–08 |
 | [FRQ — Frequência](05-attendance.md) | Encontros, marcações, correções/cancelamentos, contagens e cobertura | RF-FRQ-01–04/06/07 |
 | [APT — Aptidão](06-eligibility.md) | Critério versionado, avaliação em três situações e evidências | RF-APT-01–07 |
-| [REL — Consultas e relatórios](07-reports.md) | Históricos, alcance, frequência, aptidão e qualidade, recortados para o MVP | RF-REL-01/02/03 parcialmente; RF-REL-04/07/08/09 |
+| [REL — Consultas e relatórios](07-reports.md) | Históricos de estoque/entregas neste repositório (RF-REL-05/06); demais RFs cobrem dados FRQ/APT, fora do escopo atual | RF-REL-05/06 |
 | [AUD — Auditoria](08-audit.md) | Autoria, revisões, snapshots, proteção e reconstrução | RF-ACS-04/05 e RF-ACS-06 quanto à autoria |
+| [ATD — Atendimentos pontuais](09-service-records.md) | Registro, visita domiciliar, cancelamento e correção | RF-ATD-01–08 |
+| [EST — Estoque social](10-inventory.md) | Catálogo, entradas, triagem, saldo e ajustes | RF-EST-01–10 |
+| [ENT — Entregas às famílias](11-deliveries.md) | Entrega atômica, aptidão via gateway, reversão | RF-ENT-01–07 |
+| [BAZ — Recebimento do Bazar](12-bazar-transfer.md) | Referência única, conferência, entrada no estoque | RF-BAZ-01–04 |
+
+As specs 03 (FIC), 04 (ATV), 05 (FRQ) e 06 (APT) descrevem módulos do repositório FRQ — não implementar neste repositório, exceto o consumo via gateway indicado em cada cabeçalho de escopo (atividades `ONE_OFF` via `ActivityGateway`, contrato `EligibilityGateway`, leitura de ficha para RF-ENT-02 se necessária).
 
 Uma regra tem um proprietário: CORE define envelope/datas/idempotência; ACS define autorização; CAD resolve identidade/vínculo; ATV organiza atividades/lista; FRQ registra fatos; APT calcula situação; FIC publica a fotografia social; REL consulta; AUD preserva revisões. Módulos usam esses contratos, sem redefinir as regras do proprietário.
 
-A [matriz de rastreabilidade](traceability.md) cobre individualmente os 53 requisitos funcionais do recorte e identifica os 48 adiados/excluídos, sem reivindicar o produto completo.
+A [matriz de rastreabilidade](traceability.md) cobre os requisitos do escopo deste repositório (implementados, parciais, em scaffold e planejados) e identifica os módulos do repositório FRQ, sem reivindicar o produto completo.
 
 ## 2. Recorte e conciliação das fontes
 
-O MVP não implementa ATD, EST, ENT, BAZ nem MIG, embora sejam essenciais no produto completo. Natureza pontual é cadastro de atividade, sem registro de realização. Relatórios não criam essas dependências. Excluídos também turmas/vagas/espera, agenda, alerta de ficha/frequência, justificativa de ausência, renda total/per capita, compatibilidade por tamanho, CSV/PDF e auditoria de consultas: são desejáveis, sem inclusão explícita.
+Este repositório implementa CAD, ACS, ATD, EST, ENT, BAZ e REL sobre dados AD. Atendimento pontual é ocorrência comprovada por realização, sem chamada, e não gera presença nem evidência de aptidão. Relatórios cobrem somente os módulos acima (RF-REL-05/06); totais informam período, unidade e registros que os compõem.
+
+Não implementar neste repositório (responsabilidade do repositório FRQ — Fabrício):
+
+- Ficha social (FIC) — repositório FRQ
+- Atividades periódicas (ATV PERIODIC) — repositório FRQ
+- Frequência (FRQ) — repositório FRQ
+- Aptidão (APT) — repositório FRQ
+- Migração do Bússola Social (MIG)
+
+Também fora do escopo: turmas/vagas/espera, agenda, alerta de ficha/frequência, justificativa de ausência, renda total/per capita, compatibilidade por tamanho, CSV/PDF e auditoria de consultas — desejáveis, sem inclusão explícita. Captação financeira, CRM, vendas, contabilidade, prontuários clínicos, gestão da Escola Espírita e módulos próprios de voluntários ou RH também estão fora do escopo.
 
 | Divergência ou lacuna | Tratamento nas specs |
 | --- | --- |
@@ -55,22 +73,22 @@ Essas decisões fecham as alternativas estruturais das specs. MVP-D06 define a c
 
 Ratificação institucional de composição familiar e organização de projetos continua em DEC-01/04; período/mínimo/atividades de aptidão, em DEC-02; campo a campo da ficha, finalidades, guarda, acesso a dados reais e enquadramento institucional, em DEC-05/08; volumes/metas/implantação, em DEC-10. Desenvolvimento e demonstração usam dados sintéticos; a liberação real depende da decisão pertinente. A escolha do desenho pelo responsável pelo projeto não declara aprovação institucional em nome da instituição.
 
-## 4. Sequência de implementação
+## 4. Sequência de implementação deste repositório
 
-1. CORE: base do monorepo, migrations, contratos, transação/revisão, habilitação e dados sintéticos.
-2. ACS e AUD: conta inicial, sessão/perfis, projeção e escrita auditada. AUD participa de todas as escritas seguintes.
-3. CAD: identidade, famílias/vínculos/titular, busca/qualidade. O contrato de unificação deve ser concluído depois que as entidades de FIC/FRQ/APT existirem; preparar aliases/proveniência desde o início.
-4. ATV: catálogos, projetos/atividades e inscrições temporais.
-5. FIC e FRQ: podem ser construídos separadamente sobre a base comum; preservar suas dependências de cadastro/revisões.
-6. APT: política/avaliador, cobertura e snapshots de evidência.
-7. Fechar unificação transversal de CAD com todos os tipos de conflito do MVP; REL: consultas com os mesmos filtros/fontes/autorização.
-8. Validar os critérios por módulo e integração transversal; documentar comandos reais e condições de piloto.
+1. CORE (fundação: tipos, transações, envelopes, auditoria) — CONCLUÍDO
+2. ACS/AUD (auth, perfis, middleware, auditoria transacional) — CONCLUÍDO (parcial)
+3. ATD (atendimentos pontuais, visita domiciliar) — EM ANDAMENTO
+4. CAD (cadastro de pessoas, famílias, vínculos)
+5. EST (estoque social: itens, entradas, saldo, ajustes)
+6. BAZ (recebimento do Bazar)
+7. ENT (entregas às famílias — depende de ATD + EST + contrato EligibilityGateway)
+8. REL (relatórios RF-REL-05 e RF-REL-06)
 
-Esta ordem não autoriza liberar unificação incompleta como se tratasse conflitos de módulos ainda ausentes. A primeira etapa não precisa de aplicativo de estoques/atendimentos para validar contratos do MVP.
+Detalhe por fase em [ROADMAP-AD](../ROADMAP-AD.md). A entrega (ENT) depende do contrato real de aptidão do repositório FRQ; enquanto ele não existir, `PendingEligibilityGateway` mantém toda família Pendente (RN-18/LAC-01) e a entrega a família Pendente exige justificativa (RF-ENT-06).
 
 ## 5. Cobertura de aceite e prontidão
 
-Cada arquivo define seus cenários observáveis e identifica fonte/ID. Cenários locais `*-ACnn` são derivados para implementação, não novos IDs oficiais do PRD. AC-01/02/03/08/09 do PRD e AC-14/15/18 da ERS são cobertos no recorte; AC-04–07/10–13/16/17 ligados aos módulos excluídos não são reivindicados como aceites completos deste MVP.
+Cada arquivo define seus cenários observáveis e identifica fonte/ID. Cenários locais `*-ACnn` são derivados para implementação, não novos IDs oficiais do PRD. Cobertura de aceite neste repositório: AC-04/AC-16 (ATD), AC-11 (EST), AC-05/AC-06/AC-10 (ENT), AC-07 (BAZ). Aceites de FIC/FRQ/APT/MIG não são reivindicados aqui.
 
 As escolhas locais que alteram os contratos estão fechadas na seção 3. Implementar os modelos/comandos/erros e cenários definidos, preservando os contratos entre módulos. Políticas ainda não escolhidas permanecem configuráveis/desativadas com resultado definido; sua ausência não autoriza inventar obrigatoriedade, valores de aptidão ou liberação de dados reais.
 

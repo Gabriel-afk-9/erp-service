@@ -1,0 +1,24 @@
+{
+  "name": "erp-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "pnpm --dir api dev",
+    "dev:web": "pnpm --dir web dev",
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
+    "typecheck": "pnpm --dir api typecheck && pnpm --dir web typecheck",
+    "test": "pnpm --dir api test",
+    "test:watch": "pnpm --dir api exec vitest",
+    "test:integration": "pnpm --dir api exec vitest run --config vitest.integration.config.ts",
+    "db:migrate": "pnpm --dir api db:migrate",
+    "db:generate": "pnpm --dir api db:generate",
+    "db:seed": "pnpm --dir api db:seed",
+    "build:api": "pnpm --dir api build",
+    "build:web": "pnpm --dir web build"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.1",
+    "tsx": "4.20.3",
+    "typescript": "5.9.3"
+  }
+}

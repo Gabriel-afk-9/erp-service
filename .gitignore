@@ -50,3 +50,6 @@ build
 
 .cache
 .tmp
+
+# Agent skills (reinstallable via skills-lock.json — option A: do not commit)
+.agents/skills/

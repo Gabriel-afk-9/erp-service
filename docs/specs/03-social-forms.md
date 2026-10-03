@@ -1,3 +1,9 @@
+---
+> ⚠️ **Módulo externo — repositório FRQ (Fabrício).**
+> Este repositório NÃO implementa FIC. Consulta somente leitura via `SocialFormGateway`
+> se necessário para RF-ENT-02. Não usar como fonte normativa de implementação aqui.
+---
+
 # SPEC-FIC — Ficha social da família
 
 Versão 1.0 · Dependências: [CORE](00-foundation.md), [CAD](02-registration.md), [ACS](01-access.md) e [AUD](08-audit.md). Fontes: PRD 1.1 OBJ-01, CAP-02, RN-08/09/15 e §4.7; ERS RF-FIC-01/02/04–09, RES-01/02/05, DEC-05/08 e LAC-05/08; modelagem D-09; [ficha recebida](../ficha_cadastro_familias_2025.md). RF-FIC-03 (total/per capita) e RF-FIC-10 (alerta) permanecem evoluções excluídas desta spec.

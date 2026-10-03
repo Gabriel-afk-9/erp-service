@@ -1,3 +1,9 @@
+---
+> **Escopo neste repositório:** RF-REL-05 (estoque por período) e RF-REL-06
+> (entregas por família). Os demais RFs desta spec cobrem dados de FRQ/APT
+> e serão implementados somente se o escopo for expandido.
+---
+
 # SPEC-REL — Consultas, históricos e relatórios do MVP
 
 Versão 1.0 · Dependências: [CORE](00-foundation.md), [CAD](02-registration.md), [FIC](03-social-forms.md), [ATV](04-projects-activities.md), [FRQ](05-attendance.md), [APT](06-eligibility.md), [ACS](01-access.md). Fontes: PRD 1.1 OBJ-01/02/03/06, CAP-10 parcialmente, RN-09/15/16, AC-01/02/03/08/09; ERS RF-REL-01/02/03/04/07/08/09; modelagem §4.2. RF-REL-05/06 são de estoque/entregas e ficam fora; CSV/PDF RF-REL-10 é evolução excluída.

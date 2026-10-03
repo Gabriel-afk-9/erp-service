@@ -1,3 +1,10 @@
+---
+> **Nota de divergência (protótipo):** implementação atual usa Bearer token em
+> localStorage em vez de cookie HttpOnly + sessão Redis. Papéis implementados
+> divergem dos definidos nesta spec (ver ADR e registros de divergência).
+> Dívida técnica a resolver antes do uso com dados reais (DEC-08/LAC-08).
+---
+
 # SPEC-ACS — Autenticação, contas e perfis de acesso
 
 Versão 1.0 · Dependência: [SPEC-CORE](00-foundation.md). Base documental: PRD 1.1 OBJ-06, CAP-11, RN-08/15 e AC-09; ERS RF-ACS-01/02/03/06, RNF-SEG-01/02/03/04 e §2.3; modelagem D-10. A matriz derivada da ERS foi adotada para implementação do MVP em [MVP-D03](README.md); DEC-08/LAC-08 ainda condiciona operação com dados reais.

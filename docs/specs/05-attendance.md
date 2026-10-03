@@ -1,3 +1,9 @@
+---
+> ⚠️ **Módulo externo — repositório FRQ (Fabrício).**
+> Este repositório NÃO implementa frequência. Atendimento pontual (ATD) não é presença
+> e não gera evidência de aptidão — única relação relevante com este spec.
+---
+
 # SPEC-FRQ — Encontros e frequência
 
 Versão 1.0 · Dependências: [CORE](00-foundation.md), [CAD](02-registration.md), [ATV](04-projects-activities.md), [ACS](01-access.md), [AUD](08-audit.md). Fontes: PRD 1.1 OBJ-02/03, CAP-04, RN-08/09/13, AC-08; ERS RF-FRQ-01–04/06/07, IU-04/05/07 e AC-18; modelagem D-03/D-04. Justificativa de ausência RF-FRQ-05 e alerta RF-FRQ-08 não entram sem inclusão explícita.

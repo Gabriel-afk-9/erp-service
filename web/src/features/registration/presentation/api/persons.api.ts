@@ -56,6 +56,29 @@ export async function registerPerson(input: RegisterPersonInput): Promise<{ pers
   return data as { personId: string; membershipId: string };
 }
 
+export interface PersonDetail {
+  personId: string;
+  name: string;
+  birthDate: string | null;
+  sex: "MALE" | "FEMALE" | "OTHER" | null;
+  cpf: string | null;
+  rg: string | null;
+  occupation: string | null;
+  educationLevel: string | null;
+  contactPhone: string | null;
+  revision: number;
+  currentFamilyId: string | null;
+  currentFamilyCode: string | null;
+  currentMembershipId: string | null;
+}
+
+export async function getPerson(personId: string): Promise<PersonDetail> {
+  const result = (await get(`/persons/${encodeURIComponent(personId)}`)) as Envelope;
+  const data = result.data as PersonDetail | undefined;
+  if (!data || typeof data.personId !== "string") throw new Error(readApiError(result));
+  return data;
+}
+
 export async function correctPerson(personId: string, input: { name?: string; contactPhone?: string | null; occupation?: string | null; educationLevel?: string | null; reason: string; expectedRevision: number }): Promise<{ personId: string; revision: number }> {
   const result = (await patch(`/persons/${encodeURIComponent(personId)}`, input)) as Envelope;
   const data = result.data as { personId?: string; revision?: number } | undefined;

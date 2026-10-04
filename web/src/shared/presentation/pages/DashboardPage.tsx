@@ -8,10 +8,15 @@ export function DashboardPage() {
         <Link to="/families" className="rounded bg-white p-4 shadow">
           CAD — Famílias e vínculos
         </Link>
+        <Link to="/persons" className="rounded bg-white p-4 shadow">
+          CAD — Pessoas
+        </Link>
         <Link to="/attendance" className="rounded bg-white p-4 shadow">
           ATD — Atendimentos pontuais
         </Link>
-        <div className="rounded bg-white p-4 shadow">EST — Em implementação</div>
+        <Link to="/inventory/items" className="rounded bg-white p-4 shadow">
+          EST — Estoque (catálogo)
+        </Link>
         <div className="rounded bg-white p-4 shadow">ENT — Em implementação</div>
         <div className="rounded bg-white p-4 shadow">BAZ — Em implementação</div>
       </div>

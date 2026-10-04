@@ -162,40 +162,166 @@ model ServiceRecordAuditEntry {
   @@index([serviceRecordId])
 }
 
+enum DonationOriginType {
+  PERSON
+  ORGANIZATION
+  CAMPAIGN
+  BAZAR
+  AD_HOC
+  UNKNOWN
+}
+
 model Category {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @unique @db.VarChar(100)
+  description String?   @db.VarChar(500)
+  isActive    Boolean   @default(true)
+  revision    Int       @default(1)
+  items       Item[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([name])
 }
 
 model Unit {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  symbol            String    @unique @db.VarChar(20)
+  name              String    @db.VarChar(100)
+  decimalPlaces     Int       @db.SmallInt
+  quantityIncrement Decimal   @db.Decimal(10, 4)
+  isActive          Boolean   @default(true)
+  revision          Int       @default(1)
+  items             Item[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Item {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId         String    @db.Uuid
+  category           Category  @relation(fields: [categoryId], references: [id])
+  unitId             String    @db.Uuid
+  unit               Unit      @relation(fields: [unitId], references: [id])
+  name               String    @db.VarChar(200)
+  description        String?   @db.VarChar(500)
+  requiresExpiration Boolean
+  isActive           Boolean   @default(true)
+  revision           Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@index([name])
+}
+
+enum MovementType {
+  DONATION_IN
+  TRIAGE_DISCARD
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  OPENING_BALANCE
 }
 
 model StockReceipt {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originType   DonationOriginType
+  donorName    String?            @db.VarChar(200)
+  receivedBy   String
+  receivedAt   DateTime           @db.Date
+  note         String?            @db.VarChar(500)
+  operationKey String             @unique
+  fingerprint  String
+  lines        ReceiptLine[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([receivedAt])
+}
+
+model ReceiptLine {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  receiptId        String       @db.Uuid
+  receipt          StockReceipt @relation(fields: [receiptId], references: [id])
+  itemId           String       @db.Uuid
+  unitId           String       @db.Uuid
+  informedQuantity Decimal?     @db.Decimal(14, 4)
+  receivedQuantity Decimal      @db.Decimal(14, 4)
+  acceptedQuantity Decimal      @db.Decimal(14, 4)
+  rejectedQuantity Decimal      @db.Decimal(14, 4)
+  rejectionReason  String?      @db.VarChar(500)
+  expiresOn        DateTime?    @db.Date
+  lot              StockLot?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([receiptId])
+  @@index([itemId])
 }
 
 model StockLot {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId        String       @db.Uuid
+  unitId        String       @db.Uuid
+  receiptLineId String?      @unique @db.Uuid
+  receiptLine   ReceiptLine? @relation(fields: [receiptLineId], references: [id])
+  countLineId   String?      @unique @db.Uuid
+  expiresOn     DateTime?    @db.Date
+  movements     StockMovement[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([itemId, unitId])
 }
 
 model StockMovement {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId        String       @db.Uuid
+  unitId        String       @db.Uuid
+  lotId         String?      @db.Uuid
+  lot           StockLot?    @relation(fields: [lotId], references: [id])
+  receiptLineId String?      @db.Uuid
+  countLineId   String?      @db.Uuid
+  type          MovementType
+  quantity      Decimal      @db.Decimal(14, 4)
+  balanceDelta  Decimal      @db.Decimal(14, 4)
+  occurredAt    DateTime     @db.Date
+  recordedBy    String
+  reason        String?      @db.VarChar(500)
+  operationKey  String?      @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([itemId, unitId, occurredAt])
+  @@index([lotId])
+}
+
+model StockCount {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conductedBy String
+  conductedAt DateTime         @db.Date
+  closedAt    DateTime?        @db.Date
+  note        String?          @db.VarChar(500)
+  lines       StockCountLine[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model StockCountLine {
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  countId          String     @db.Uuid
+  count            StockCount @relation(fields: [countId], references: [id])
+  itemId           String     @db.Uuid
+  unitId           String     @db.Uuid
+  lotId            String?    @db.Uuid
+  expiresOn        DateTime?  @db.Date
+  expectedQuantity Decimal    @db.Decimal(14, 4)
+  countedQuantity  Decimal    @db.Decimal(14, 4)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([countId])
 }
 
 model Delivery {

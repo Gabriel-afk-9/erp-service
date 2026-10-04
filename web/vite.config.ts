@@ -13,6 +13,7 @@ export default defineConfig({
       "/families": "http://localhost:3000",
       "/persons": "http://localhost:3000",
       "/memberships": "http://localhost:3000",
+      "/inventory": "http://localhost:3000",
     },
   },
 });

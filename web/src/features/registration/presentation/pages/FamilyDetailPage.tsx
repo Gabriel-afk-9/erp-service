@@ -16,7 +16,7 @@ export function FamilyDetailPage() {
   const [editReason, setEditReason] = useState("");
   const [editFields, setEditFields] = useState({ referenceName: "", address: "", neighborhood: "", postalCode: "", contactPhone: "" });
   const [addQuery, setAddQuery] = useState("");
-  const [addResults, setAddResults] = useState<{ personId: string; name: string }[]>([]);
+  const [addResults, setAddResults] = useState<{ personId: string; name: string; currentFamilyCode: string | null }[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [validFrom, setValidFrom] = useState(today());
   const [isReference, setIsReference] = useState(false);
@@ -74,7 +74,7 @@ export function FamilyDetailPage() {
   async function handleSearchPerson(): Promise<void> {
     try {
       const result = await searchPersons({ q: addQuery.trim() || undefined });
-      setAddResults(result.items.map((p) => ({ personId: p.personId, name: p.name })));
+      setAddResults(result.items.map((p) => ({ personId: p.personId, name: p.name, currentFamilyCode: p.currentFamilyCode })));
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     }
@@ -178,7 +178,7 @@ export function FamilyDetailPage() {
           <select className="mt-2 w-full rounded border px-2 py-1 text-sm" value={selectedPersonId} onChange={(e) => setSelectedPersonId(e.target.value)}>
             <option value="">Selecione</option>
             {addResults.map((person) => (
-              <option key={person.personId} value={person.personId}>{person.name}</option>
+              <option key={person.personId} value={person.personId}>{person.name} — família atual: {person.currentFamilyCode ?? "—"}</option>
             ))}
           </select>
         ) : null}

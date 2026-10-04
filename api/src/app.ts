@@ -25,6 +25,37 @@ import { CorrectPersonUseCase } from "./features/registration/application/use-ca
 import { GetPersonUseCase } from "./features/registration/application/use-cases/get-person/get-person.use-case.js";
 import { SearchPersonsUseCase } from "./features/registration/application/use-cases/search-persons/search-persons.use-case.js";
 import { registerPersonRoutes } from "./features/registration/presentation/routes/persons.routes.js";
+import { CreateCategoryUseCase } from "./features/inventory/application/use-cases/create-category/create-category.use-case.js";
+import { CreateItemUseCase } from "./features/inventory/application/use-cases/create-item/create-item.use-case.js";
+import { CreateUnitUseCase } from "./features/inventory/application/use-cases/create-unit/create-unit.use-case.js";
+import { DeactivateCategoryUseCase } from "./features/inventory/application/use-cases/deactivate-category/deactivate-category.use-case.js";
+import { DeactivateItemUseCase } from "./features/inventory/application/use-cases/deactivate-item/deactivate-item.use-case.js";
+import { GetCategoryUseCase } from "./features/inventory/application/use-cases/get-category/get-category.use-case.js";
+import { GetItemUseCase } from "./features/inventory/application/use-cases/get-item/get-item.use-case.js";
+import { ListCategoriesUseCase } from "./features/inventory/application/use-cases/list-categories/list-categories.use-case.js";
+import { ListItemsUseCase } from "./features/inventory/application/use-cases/list-items/list-items.use-case.js";
+import { ListUnitsUseCase } from "./features/inventory/application/use-cases/list-units/list-units.use-case.js";
+import { UpdateCategoryUseCase } from "./features/inventory/application/use-cases/update-category/update-category.use-case.js";
+import { UpdateItemUseCase } from "./features/inventory/application/use-cases/update-item/update-item.use-case.js";
+import { PrismaCategoryRepository } from "./features/inventory/infrastructure/repositories/prisma-category.repository.js";
+import { PrismaItemRepository } from "./features/inventory/infrastructure/repositories/prisma-item.repository.js";
+import { PrismaUnitRepository } from "./features/inventory/infrastructure/repositories/prisma-unit.repository.js";
+import { registerInventoryRoutes } from "./features/inventory/presentation/routes/inventory.routes.js";
+import { AdjustStockUseCase } from "./features/inventory/application/use-cases/adjust-stock/adjust-stock.use-case.js";
+import { CloseStockCountUseCase } from "./features/inventory/application/use-cases/close-count/close-count.use-case.js";
+import { ConfirmStockReceiptUseCase } from "./features/inventory/application/use-cases/confirm-receipt/confirm-receipt.use-case.js";
+import { CreateStockCountUseCase } from "./features/inventory/application/use-cases/create-count/create-count.use-case.js";
+import { GetItemBalanceUseCase } from "./features/inventory/application/use-cases/get-item-balance/get-item-balance.use-case.js";
+import { GetItemMovementsUseCase } from "./features/inventory/application/use-cases/get-item-movements/get-item-movements.use-case.js";
+import { GetReceiptUseCase } from "./features/inventory/application/use-cases/get-receipt/get-receipt.use-case.js";
+import { ListItemsWithBalanceUseCase } from "./features/inventory/application/use-cases/list-items-with-balance/list-items-with-balance.use-case.js";
+import { ListReceiptsUseCase } from "./features/inventory/application/use-cases/list-receipts/list-receipts.use-case.js";
+import { RecordCountLineUseCase } from "./features/inventory/application/use-cases/record-count-line/record-count-line.use-case.js";
+import { PrismaCountRepository } from "./features/inventory/infrastructure/repositories/prisma-count.repository.js";
+import { PrismaLotRepository } from "./features/inventory/infrastructure/repositories/prisma-lot.repository.js";
+import { PrismaMovementRepository } from "./features/inventory/infrastructure/repositories/prisma-movement.repository.js";
+import { PrismaReceiptRepository } from "./features/inventory/infrastructure/repositories/prisma-receipt.repository.js";
+import { registerStockRoutes } from "./features/inventory/presentation/routes/stock.routes.js";
 import { CancelServiceRecordUseCase } from "./features/atd/application/use-cases/cancel-service-record/cancel-service-record.use-case.js";
 import { CorrectServiceRecordNoteUseCase } from "./features/atd/application/use-cases/correct-service-record-note/correct-service-record-note.use-case.js";
 import { GetServiceRecordUseCase } from "./features/atd/application/use-cases/get-service-record/get-service-record.use-case.js";
@@ -106,6 +137,43 @@ export async function createApp(): Promise<FastifyInstance> {
     get: getPerson,
     correct: correctPerson,
     search: searchPersons,
+  });
+
+  const categoryRepository = new PrismaCategoryRepository(prisma);
+  const unitRepository = new PrismaUnitRepository(prisma);
+  const itemRepository = new PrismaItemRepository(prisma);
+
+  await registerInventoryRoutes(app, {
+    createCategory: new CreateCategoryUseCase(categoryRepository),
+    updateCategory: new UpdateCategoryUseCase(categoryRepository),
+    deactivateCategory: new DeactivateCategoryUseCase(categoryRepository),
+    listCategories: new ListCategoriesUseCase(categoryRepository),
+    getCategory: new GetCategoryUseCase(categoryRepository, itemRepository, unitRepository),
+    createUnit: new CreateUnitUseCase(unitRepository),
+    listUnits: new ListUnitsUseCase(unitRepository),
+    createItem: new CreateItemUseCase(itemRepository, categoryRepository, unitRepository),
+    updateItem: new UpdateItemUseCase(itemRepository, categoryRepository),
+    deactivateItem: new DeactivateItemUseCase(itemRepository),
+    listItems: new ListItemsUseCase(itemRepository, categoryRepository, unitRepository),
+    getItem: new GetItemUseCase(itemRepository, categoryRepository, unitRepository),
+  });
+
+  const receiptRepository = new PrismaReceiptRepository(prisma);
+  const lotRepository = new PrismaLotRepository(prisma);
+  const movementRepository = new PrismaMovementRepository(prisma);
+  const countRepository = new PrismaCountRepository(prisma);
+
+  await registerStockRoutes(app, {
+    confirmReceipt: new ConfirmStockReceiptUseCase(receiptRepository, itemRepository, unitRepository),
+    getReceipt: new GetReceiptUseCase(receiptRepository, itemRepository, unitRepository, lotRepository),
+    listReceipts: new ListReceiptsUseCase(receiptRepository),
+    getItemBalance: new GetItemBalanceUseCase(itemRepository, lotRepository, movementRepository),
+    listItemsWithBalance: new ListItemsWithBalanceUseCase(itemRepository, categoryRepository, unitRepository, lotRepository, movementRepository),
+    getItemMovements: new GetItemMovementsUseCase(itemRepository, movementRepository),
+    adjustStock: new AdjustStockUseCase(itemRepository, lotRepository, movementRepository),
+    createCount: new CreateStockCountUseCase(countRepository, lotRepository, movementRepository),
+    recordCountLine: new RecordCountLineUseCase(countRepository, lotRepository, itemRepository),
+    closeCount: new CloseStockCountUseCase(countRepository, lotRepository, movementRepository, itemRepository),
   });
 
   return app;

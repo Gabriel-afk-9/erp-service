@@ -159,6 +159,88 @@ async function main(): Promise<void> {
 
   await prisma.$executeRawUnsafe(`SELECT setval('family_code_seq', 5, true)`);
 
+  const categoryCount = await prisma.category.count();
+  if (categoryCount === 0) {
+    const alimentos = await prisma.category.create({ data: { name: "Alimentos", description: "Itens alimenticios" } });
+    const higiene = await prisma.category.create({ data: { name: "Higiene", description: "Itens de higiene" } });
+    const vestuario = await prisma.category.create({ data: { name: "Vestuário", description: "Roupas e calcados" } });
+    const un = await prisma.unit.create({ data: { symbol: "UN", name: "Unidade", decimalPlaces: 0, quantityIncrement: 1 } });
+    const kg = await prisma.unit.create({ data: { symbol: "KG", name: "Quilograma", decimalPlaces: 3, quantityIncrement: 0.1 } });
+    const litro = await prisma.unit.create({ data: { symbol: "L", name: "Litro", decimalPlaces: 3, quantityIncrement: 0.5 } });
+    await prisma.item.createMany({
+      data: [
+        { categoryId: alimentos.id, unitId: kg.id, name: "Arroz 1kg", requiresExpiration: true },
+        { categoryId: alimentos.id, unitId: kg.id, name: "Feijão 1kg", requiresExpiration: true },
+        { categoryId: higiene.id, unitId: un.id, name: "Sabonete", requiresExpiration: false },
+        { categoryId: vestuario.id, unitId: un.id, name: "Camiseta", requiresExpiration: false },
+      ],
+    });
+    console.log("Seed EST-3a aplicado: 3 categorias, 3 unidades, 4 itens");
+    void litro;
+  } else {
+    console.log(`Seed EST-3a ja aplicado: ${categoryCount} categorias encontradas.`);
+  }
+
+  const receiptCount = await prisma.stockReceipt.count();
+  if (receiptCount === 0) {
+    const arroz = await prisma.item.findFirst({ where: { name: "Arroz 1kg" } });
+    const feijao = await prisma.item.findFirst({ where: { name: "Feijão 1kg" } });
+    if (arroz && feijao) {
+      const receipt = await prisma.stockReceipt.create({
+        data: {
+          originType: "PERSON",
+          donorName: "Doador Sintético",
+          receivedBy: "seed",
+          receivedAt: new Date("2024-01-15"),
+          note: "Recebimento sintético de demonstração",
+          operationKey: "00000000-0000-0000-0000-000000000001",
+          fingerprint: "seed",
+        },
+      });
+      const line1 = await prisma.receiptLine.create({
+        data: {
+          receiptId: receipt.id,
+          itemId: arroz.id,
+          unitId: arroz.unitId,
+          informedQuantity: 10,
+          receivedQuantity: 9,
+          acceptedQuantity: 9,
+          rejectedQuantity: 0,
+          expiresOn: new Date("2026-01-15"),
+        },
+      });
+      const line2 = await prisma.receiptLine.create({
+        data: {
+          receiptId: receipt.id,
+          itemId: feijao.id,
+          unitId: feijao.unitId,
+          informedQuantity: 5,
+          receivedQuantity: 5,
+          acceptedQuantity: 4,
+          rejectedQuantity: 1,
+          rejectionReason: "Embalagem violada",
+          expiresOn: new Date("2026-01-15"),
+        },
+      });
+      const lot1 = await prisma.stockLot.create({
+        data: { itemId: arroz.id, unitId: arroz.unitId, receiptLineId: line1.id, expiresOn: new Date("2026-01-15") },
+      });
+      const lot2 = await prisma.stockLot.create({
+        data: { itemId: feijao.id, unitId: feijao.unitId, receiptLineId: line2.id, expiresOn: new Date("2026-01-15") },
+      });
+      await prisma.stockMovement.createMany({
+        data: [
+          { itemId: arroz.id, unitId: arroz.unitId, lotId: lot1.id, receiptLineId: line1.id, type: "DONATION_IN", quantity: 9, balanceDelta: 9, occurredAt: new Date("2024-01-15"), recordedBy: "seed" },
+          { itemId: feijao.id, unitId: feijao.unitId, lotId: lot2.id, receiptLineId: line2.id, type: "DONATION_IN", quantity: 4, balanceDelta: 4, occurredAt: new Date("2024-01-15"), recordedBy: "seed" },
+          { itemId: feijao.id, unitId: feijao.unitId, receiptLineId: line2.id, type: "TRIAGE_DISCARD", quantity: 1, balanceDelta: 0, occurredAt: new Date("2024-01-15"), recordedBy: "seed", reason: "Embalagem violada" },
+        ],
+      });
+      console.log('Seed EST-3b aplicado: 1 recebimento, saldo "Arroz 1kg" = 9 KG');
+    }
+  } else {
+    console.log(`Seed EST-3b ja aplicado: ${receiptCount} recebimentos encontrados.`);
+  }
+
   console.log("Seed CAD aplicado: 5 familias, 10 pessoas, 10 vinculos");
   console.log("Codigos: 000001..000005 (proximo: 000006)");
   console.log("Atividades: 3 ONE_OFF via InMemoryActivityGateway");

@@ -15,6 +15,13 @@ import { CategoryDetailPage } from "./features/inventory/presentation/pages/Cate
 import { ItemsPage } from "./features/inventory/presentation/pages/ItemsPage.js";
 import { NewItemPage } from "./features/inventory/presentation/pages/NewItemPage.js";
 import { UnitsPage } from "./features/inventory/presentation/pages/UnitsPage.js";
+import { BazarPage } from "./features/inventory/presentation/pages/BazarPage.js";
+import { ReportsPage } from "./features/reports/presentation/pages/ReportsPage.js";
+import { StockReportPage } from "./features/reports/presentation/pages/StockReportPage.js";
+import { DeliveryReportPage } from "./features/reports/presentation/pages/DeliveryReportPage.js";
+import { DeliveriesPage } from "./features/deliveries/presentation/pages/DeliveriesPage.js";
+import { DeliveryDetailPage } from "./features/deliveries/presentation/pages/DeliveryDetailPage.js";
+import { NewDeliveryPage } from "./features/deliveries/presentation/pages/NewDeliveryPage.js";
 
 export function App() {
   return (
@@ -36,6 +43,13 @@ export function App() {
             <Route path="/inventory/units" element={<UnitsPage />} />
             <Route path="/inventory/items" element={<ItemsPage />} />
             <Route path="/inventory/items/new" element={<NewItemPage />} />
+            <Route path="/inventory/bazar" element={<BazarPage />} />
+            <Route path="/deliveries" element={<DeliveriesPage />} />
+            <Route path="/deliveries/new" element={<NewDeliveryPage />} />
+            <Route path="/deliveries/:id" element={<DeliveryDetailPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/stock" element={<StockReportPage />} />
+            <Route path="/reports/deliveries" element={<DeliveryReportPage />} />
           </Route>
         </Route>
       </Routes>

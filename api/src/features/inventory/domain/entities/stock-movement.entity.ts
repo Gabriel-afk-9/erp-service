@@ -2,15 +2,18 @@ import { Id } from "../../../../shared/domain/value-objects/id.value-object.js";
 import type { CivilDate } from "../../../../shared/domain/value-objects/civil-date.value-object.js";
 import { MovementQuantityInvalidError } from "../errors/movement-quantity-invalid.error.js";
 
-export type MovementType = "DONATION_IN" | "TRIAGE_DISCARD" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "OPENING_BALANCE";
+export type MovementType = "DONATION_IN" | "BAZAR_IN" | "TRIAGE_DISCARD" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "OPENING_BALANCE" | "DELIVERY_OUT" | "DELIVERY_REVERSAL";
 
 export function movementEffect(type: MovementType): 1 | 0 | -1 {
   switch (type) {
     case "DONATION_IN":
+    case "BAZAR_IN":
     case "ADJUSTMENT_IN":
     case "OPENING_BALANCE":
+    case "DELIVERY_REVERSAL":
       return 1;
     case "ADJUSTMENT_OUT":
+    case "DELIVERY_OUT":
       return -1;
     case "TRIAGE_DISCARD":
       return 0;
@@ -31,6 +34,7 @@ export interface StockMovementProps {
   recordedBy: string;
   reason: string | null;
   operationKey: string | null;
+  reversesMovementId: string | null;
 }
 
 export interface NewStockMovementProps {
@@ -45,6 +49,7 @@ export interface NewStockMovementProps {
   recordedBy: string;
   reason?: string | null;
   operationKey?: string | null;
+  reversesMovementId?: string | null;
 }
 
 export class StockMovement {
@@ -68,6 +73,7 @@ export class StockMovement {
       recordedBy: input.recordedBy,
       reason: input.reason?.trim()?.slice(0, 500) || null,
       operationKey: input.operationKey ?? null,
+      reversesMovementId: input.reversesMovementId ?? null,
     });
   }
 
@@ -125,5 +131,9 @@ export class StockMovement {
 
   get operationKey(): string | null {
     return this.props.operationKey;
+  }
+
+  get reversesMovementId(): string | null {
+    return this.props.reversesMovementId;
   }
 }

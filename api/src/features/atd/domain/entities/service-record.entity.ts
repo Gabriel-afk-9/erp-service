@@ -6,7 +6,7 @@ import { NoteInvalidError } from "../errors/note-invalid.error.js";
 import { ServiceRecordAlreadyCanceledError } from "../errors/service-record-already-canceled.error.js";
 import type { ExecutorInfo } from "../value-objects/executor-info.value-object.js";
 
-export type ServiceRecordStatus = "COMPLETED" | "CANCELED";
+export type ServiceRecordStatus = "COMPLETED" | "CANCELED" | "REVERSED";
 
 export const SERVICE_RECORD_NOTE_MAX_LENGTH = 500;
 
@@ -135,5 +135,12 @@ export class ServiceRecord {
       throw new ServiceRecordAlreadyCanceledError(this.props.id);
     }
     this.props = { ...this.props, note: normalizeNote(newNote), revision: this.props.revision + 1 };
+  }
+
+  markReversed(): void {
+    if (this.props.status !== "COMPLETED") {
+      throw new ServiceRecordAlreadyCanceledError(this.props.id);
+    }
+    this.props = { ...this.props, status: "REVERSED", revision: this.props.revision + 1 };
   }
 }

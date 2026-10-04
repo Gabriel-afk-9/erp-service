@@ -17,8 +17,15 @@ export function DashboardPage() {
         <Link to="/inventory/items" className="rounded bg-white p-4 shadow">
           EST — Estoque (catálogo)
         </Link>
-        <div className="rounded bg-white p-4 shadow">ENT — Em implementação</div>
-        <div className="rounded bg-white p-4 shadow">BAZ — Em implementação</div>
+        <Link to="/deliveries" className="rounded bg-white p-4 shadow">
+          ENT — Entregas às famílias
+        </Link>
+        <Link to="/inventory/bazar" className="rounded bg-white p-4 shadow">
+          BAZ — Transferências do Bazar
+        </Link>
+        <Link to="/reports" className="rounded bg-white p-4 shadow">
+          REL — Relatórios de estoque e entregas
+        </Link>
       </div>
     </div>
   );

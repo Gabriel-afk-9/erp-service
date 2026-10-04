@@ -96,6 +96,20 @@ export async function createUnit(input: { symbol: string; name: string; decimalP
   return data as { unitId: string };
 }
 
+export interface ItemBalanceLot {
+  lotId: string;
+  expiresOn: string | null;
+  onHand: number;
+  status: "AVAILABLE" | "EXPIRED" | "EMPTY";
+}
+
+export async function getItemBalance(itemId: string): Promise<{ onHand: number; available: number; lots: ItemBalanceLot[] }> {
+  const result = (await get(`/inventory/items/${encodeURIComponent(itemId)}/balance`)) as Envelope;
+  const data = result.data as { onHand?: number; available?: number; lots?: ItemBalanceLot[] } | undefined;
+  if (!data || typeof data.onHand !== "number" || !Array.isArray(data.lots)) throw new Error(readApiError(result));
+  return { onHand: data.onHand, available: data.available ?? 0, lots: data.lots };
+}
+
 export async function listItems(params: { q?: string; categoryId?: string; onlyActive?: boolean }): Promise<{ items: InventoryItem[] }> {
   const qs = new URLSearchParams();
   if (params.q) qs.set("q", params.q);

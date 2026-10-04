@@ -241,6 +241,48 @@ async function main(): Promise<void> {
     console.log(`Seed EST-3b ja aplicado: ${receiptCount} recebimentos encontrados.`);
   }
 
+  const bazarCount = await prisma.bazarTransfer.count();
+  if (bazarCount === 0) {
+    const arrozItem = await prisma.item.findFirst({ where: { name: "Arroz 1kg" } });
+    if (arrozItem) {
+      const receipt = await prisma.stockReceipt.create({
+        data: {
+          originType: "BAZAR",
+          donorName: "Bazar Luz da Esperança",
+          receivedBy: "seed",
+          receivedAt: new Date("2024-02-01"),
+          note: "Transferência sintética do Bazar",
+          operationKey: "00000000-0000-0000-0000-000000000002",
+          fingerprint: "seed-bazar",
+        },
+      });
+      const line = await prisma.receiptLine.create({
+        data: {
+          receiptId: receipt.id,
+          itemId: arrozItem.id,
+          unitId: arrozItem.unitId,
+          informedQuantity: 10,
+          receivedQuantity: 8,
+          acceptedQuantity: 8,
+          rejectedQuantity: 0,
+          expiresOn: new Date("2026-06-01"),
+        },
+      });
+      const lot = await prisma.stockLot.create({
+        data: { itemId: arrozItem.id, unitId: arrozItem.unitId, receiptLineId: line.id, expiresOn: new Date("2026-06-01") },
+      });
+      await prisma.stockMovement.create({
+        data: { itemId: arrozItem.id, unitId: arrozItem.unitId, lotId: lot.id, receiptLineId: line.id, type: "BAZAR_IN", quantity: 8, balanceDelta: 8, occurredAt: new Date("2024-02-01"), recordedBy: "seed" },
+      });
+      await prisma.bazarTransfer.create({
+        data: { receiptId: receipt.id, externalReference: "BAZ-2024-0001" },
+      });
+      console.log("Seed BAZ aplicado: 1 transferência (10 informadas / 8 recebidas / 8 aceitas de Arroz)");
+    }
+  } else {
+    console.log(`Seed BAZ ja aplicado: ${bazarCount} transferências encontradas.`);
+  }
+
   console.log("Seed CAD aplicado: 5 familias, 10 pessoas, 10 vinculos");
   console.log("Codigos: 000001..000005 (proximo: 000006)");
   console.log("Atividades: 3 ONE_OFF via InMemoryActivityGateway");

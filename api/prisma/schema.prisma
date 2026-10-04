@@ -19,6 +19,7 @@ generator client {
 enum ServiceRecordStatus {
   COMPLETED
   CANCELED
+  REVERSED
 }
 
 enum LocationType {
@@ -131,6 +132,7 @@ model ServiceRecord {
   revision        Int                       @default(1)
   homeVisit       HomeVisit?
   auditEntries    ServiceRecordAuditEntry[]
+  delivery        Delivery?
   createdAt       DateTime                  @default(now())
   updatedAt       DateTime                  @updatedAt
 
@@ -218,10 +220,13 @@ model Item {
 
 enum MovementType {
   DONATION_IN
+  BAZAR_IN
   TRIAGE_DISCARD
   ADJUSTMENT_IN
   ADJUSTMENT_OUT
   OPENING_BALANCE
+  DELIVERY_OUT
+  DELIVERY_REVERSAL
 }
 
 model StockReceipt {
@@ -234,6 +239,7 @@ model StockReceipt {
   operationKey String             @unique
   fingerprint  String
   lines        ReceiptLine[]
+  bazarTransfer BazarTransfer?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
@@ -290,6 +296,7 @@ model StockMovement {
   recordedBy    String
   reason        String?      @db.VarChar(500)
   operationKey  String?      @unique
+  reversesMovementId String? @unique @db.Uuid
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
@@ -325,19 +332,62 @@ model StockCountLine {
 }
 
 model Delivery {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceRecordId      String         @unique @db.Uuid
+  serviceRecord        ServiceRecord  @relation(fields: [serviceRecordId], references: [id])
+  familyId             String
+  assessmentId         String
+  eligibilityStatus    String         @db.VarChar(20)
+  occurredAt           DateTime       @db.Date
+  collectedByPersonId  String?        @db.Uuid
+  collectedByMembershipId String?     @db.Uuid
+  executorName         String         @db.VarChar(200)
+  executorRole         String         @db.VarChar(200)
+  exceptionReason      String?        @db.VarChar(500)
+  authorizedBy         String?        @db.VarChar(200)
+  operationKey         String         @unique
+  fingerprint          String
+  status               String         @default("COMPLETED") @db.VarChar(20)
+  lines                DeliveryLine[]
+  reversal             DeliveryReversal?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([familyId, occurredAt(sort: Desc)])
 }
 
 model DeliveryLine {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deliveryId String   @db.Uuid
+  delivery   Delivery @relation(fields: [deliveryId], references: [id])
+  stockLotId String   @db.Uuid
+  unitId     String   @db.Uuid
+  quantity   Decimal  @db.Decimal(14, 4)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([deliveryId, stockLotId])
+  @@index([deliveryId])
+}
+
+model DeliveryReversal {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deliveryId String   @unique @db.Uuid
+  delivery   Delivery @relation(fields: [deliveryId], references: [id])
+  reason     String   @db.VarChar(500)
+  reversedAt DateTime @db.Date
+  reversedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model BazarTransfer {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  receiptId         String       @unique @db.Uuid
+  receipt           StockReceipt @relation(fields: [receiptId], references: [id])
+  externalReference String       @unique @db.VarChar(200)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([externalReference])
 }

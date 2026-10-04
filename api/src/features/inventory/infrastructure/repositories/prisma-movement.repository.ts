@@ -17,6 +17,7 @@ type MovementRow = {
   recordedBy: string;
   reason: string | null;
   operationKey: string | null;
+  reversesMovementId?: string | null;
 };
 
 function toEntity(row: MovementRow): StockMovement {
@@ -34,6 +35,7 @@ function toEntity(row: MovementRow): StockMovement {
     recordedBy: row.recordedBy,
     reason: row.reason,
     operationKey: row.operationKey,
+    reversesMovementId: row.reversesMovementId ?? null,
   });
 }
 

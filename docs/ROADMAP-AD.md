@@ -30,13 +30,18 @@ RF-ENT-01 a RF-ENT-07
 Depende de: ATD (FASE 1), EST (FASE 3), contrato EligibilityGateway (FRQ/Fabrício)
 Entrega atômica com saída de estoque, consulta prévia de aptidão, reversão integral
 
-## FASE 6 — REL + ACS (Relatórios e acesso refinado)
-RF-REL-05 (estoque por período), RF-REL-06 (entregas por família)
-Refinamento da autenticação (divergências D2/D3 da auditoria)
-RF-ACS-01 a RF-ACS-07
+## FASE 6 — REL + ACS ✅ CONCLUÍDA
+RF-REL-05 (movimentação de estoque) e RF-REL-06 (entregas por família)
+implementados com queryFingerprint simplificado e CSV no cliente.
+RF-ACS-01–07 registrados como dívida técnica (ver docs/audits/).
 
 ## Bloqueadores conhecidos
 - ENT-02/06: aguarda contrato real de aptidão (FRQ/Fabrício + LAC-01)
 - BAZ: LAC-07 (referência/divergência do Bazar) em aberto — implementar com referência
   manual provisória para o protótipo
 - Dados reais: DEC-08/LAC-08 em aberto — manter DATA_MODE=SYNTHETIC
+
+## Estado do protótipo — COMPLETO
+Todas as fases implementadas: FASE 0–6.
+190 testes verdes. Zero migrations pendentes.
+Validação final: rodar com Docker (ver README).

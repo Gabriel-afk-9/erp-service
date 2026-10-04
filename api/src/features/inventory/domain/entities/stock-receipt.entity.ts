@@ -1,7 +1,7 @@
 import { Id } from "../../../../shared/domain/value-objects/id.value-object.js";
 import type { CivilDate } from "../../../../shared/domain/value-objects/civil-date.value-object.js";
 
-export type DonationOrigin = "PERSON" | "ORGANIZATION" | "CAMPAIGN" | "AD_HOC" | "UNKNOWN";
+export type DonationOrigin = "PERSON" | "ORGANIZATION" | "CAMPAIGN" | "BAZAR" | "AD_HOC" | "UNKNOWN";
 
 export interface StockReceiptProps {
   id: string;

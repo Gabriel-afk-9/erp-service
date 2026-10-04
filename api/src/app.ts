@@ -56,6 +56,11 @@ import { PrismaLotRepository } from "./features/inventory/infrastructure/reposit
 import { PrismaMovementRepository } from "./features/inventory/infrastructure/repositories/prisma-movement.repository.js";
 import { PrismaReceiptRepository } from "./features/inventory/infrastructure/repositories/prisma-receipt.repository.js";
 import { registerStockRoutes } from "./features/inventory/presentation/routes/stock.routes.js";
+import { GetBazarTransferUseCase } from "./features/inventory/application/use-cases/get-bazar-transfer/get-bazar-transfer.use-case.js";
+import { ListBazarTransfersUseCase } from "./features/inventory/application/use-cases/list-bazar-transfers/list-bazar-transfers.use-case.js";
+import { RegisterBazarTransferUseCase } from "./features/inventory/application/use-cases/register-bazar-transfer/register-bazar-transfer.use-case.js";
+import { PrismaBazarTransferRepository } from "./features/inventory/infrastructure/repositories/prisma-bazar-transfer.repository.js";
+import { registerBazarRoutes } from "./features/inventory/presentation/routes/bazar.routes.js";
 import { CancelServiceRecordUseCase } from "./features/atd/application/use-cases/cancel-service-record/cancel-service-record.use-case.js";
 import { CorrectServiceRecordNoteUseCase } from "./features/atd/application/use-cases/correct-service-record-note/correct-service-record-note.use-case.js";
 import { GetServiceRecordUseCase } from "./features/atd/application/use-cases/get-service-record/get-service-record.use-case.js";
@@ -63,6 +68,18 @@ import { ListServiceRecordsByFamilyUseCase } from "./features/atd/application/us
 import { RegisterServiceRecordUseCase } from "./features/atd/application/use-cases/register-service-record/register-service-record.use-case.js";
 import { PrismaServiceRecordRepository } from "./features/atd/infrastructure/repositories/prisma-service-record.repository.js";
 import { registerServiceRecordRoutes } from "./features/atd/presentation/routes/service-record.routes.js";
+import { PendingEligibilityGateway } from "./shared/infrastructure/gateways/pending-eligibility.gateway.js";
+import { ConfirmDeliveryUseCase } from "./features/deliveries/application/use-cases/confirm-delivery/confirm-delivery.use-case.js";
+import { GetDeliveryUseCase } from "./features/deliveries/application/use-cases/get-delivery/get-delivery.use-case.js";
+import { ListDeliveriesUseCase } from "./features/deliveries/application/use-cases/list-deliveries/list-deliveries.use-case.js";
+import { PreviewDeliveryUseCase } from "./features/deliveries/application/use-cases/preview-delivery/preview-delivery.use-case.js";
+import { ReverseDeliveryUseCase } from "./features/deliveries/application/use-cases/reverse-delivery/reverse-delivery.use-case.js";
+import { PrismaDeliveryRepository } from "./features/deliveries/infrastructure/repositories/prisma-delivery.repository.js";
+import { registerDeliveryRoutes } from "./features/deliveries/presentation/routes/delivery.routes.js";
+import { DeliveryReportUseCase } from "./features/reports/application/use-cases/delivery-report/delivery-report.use-case.js";
+import { StockMovementReportUseCase } from "./features/reports/application/use-cases/stock-movement-report/stock-movement-report.use-case.js";
+import { PrismaReportRepository } from "./features/reports/infrastructure/repositories/prisma-report.repository.js";
+import { registerReportRoutes } from "./features/reports/presentation/routes/report.routes.js";
 import { prisma } from "./shared/infrastructure/database/prisma.client.js";
 
 export async function createApp(): Promise<FastifyInstance> {
@@ -115,9 +132,13 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   const serviceRecordRepository = new PrismaServiceRecordRepository(prisma);
+  const deliveryRepository = new PrismaDeliveryRepository(prisma);
+  const eligibility = new PendingEligibilityGateway();
+  const checkNoDelivery = async (serviceRecordId: string): Promise<boolean> =>
+    (await deliveryRepository.findByServiceRecordId(serviceRecordId)) === null;
   await registerServiceRecordRoutes(app, {
     register: new RegisterServiceRecordUseCase(serviceRecordRepository, registry, activity),
-    cancel: new CancelServiceRecordUseCase(serviceRecordRepository),
+    cancel: new CancelServiceRecordUseCase(serviceRecordRepository, checkNoDelivery),
     correctNote: new CorrectServiceRecordNoteUseCase(serviceRecordRepository),
     get: new GetServiceRecordUseCase(serviceRecordRepository),
     listByFamily: new ListServiceRecordsByFamilyUseCase(serviceRecordRepository),
@@ -174,6 +195,29 @@ export async function createApp(): Promise<FastifyInstance> {
     createCount: new CreateStockCountUseCase(countRepository, lotRepository, movementRepository),
     recordCountLine: new RecordCountLineUseCase(countRepository, lotRepository, itemRepository),
     closeCount: new CloseStockCountUseCase(countRepository, lotRepository, movementRepository, itemRepository),
+  });
+
+  const bazarTransferRepository = new PrismaBazarTransferRepository(prisma);
+
+  await registerBazarRoutes(app, {
+    register: new RegisterBazarTransferUseCase(bazarTransferRepository, receiptRepository, itemRepository, unitRepository),
+    get: new GetBazarTransferUseCase(bazarTransferRepository, receiptRepository, itemRepository, lotRepository),
+    list: new ListBazarTransfersUseCase(bazarTransferRepository),
+  });
+
+  await registerDeliveryRoutes(app, {
+    confirm: new ConfirmDeliveryUseCase(deliveryRepository, itemRepository, lotRepository, movementRepository, registry, activity, eligibility),
+    reverse: new ReverseDeliveryUseCase(deliveryRepository, serviceRecordRepository, lotRepository, movementRepository),
+    preview: new PreviewDeliveryUseCase(deliveryRepository, registry, eligibility),
+    get: new GetDeliveryUseCase(deliveryRepository),
+    list: new ListDeliveriesUseCase(deliveryRepository),
+  });
+
+  const reportRepository = new PrismaReportRepository(prisma);
+
+  await registerReportRoutes(app, {
+    stockMovements: new StockMovementReportUseCase(reportRepository),
+    deliveries: new DeliveryReportUseCase(reportRepository),
   });
 
   return app;

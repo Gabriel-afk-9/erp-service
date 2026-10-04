@@ -22,6 +22,7 @@ import { ObservedSituationInvalidError } from "../../domain/errors/observed-situ
 import { PersonNotMemberAtDateError } from "../../domain/errors/person-not-member-at-date.error.js";
 import { ReasonRequiredError } from "../../domain/errors/reason-required.error.js";
 import { ServiceRecordAlreadyCanceledError } from "../../domain/errors/service-record-already-canceled.error.js";
+import { ServiceRecordHasDeliveryError } from "../../domain/errors/service-record-has-delivery.error.js";
 import { ServiceRecordNotFoundError } from "../../domain/errors/service-record-not-found.error.js";
 
 export interface ServiceRecordRouteDeps {
@@ -49,7 +50,8 @@ function toStatusCode(error: unknown): number {
     error instanceof ObservedSituationInvalidError ||
     error instanceof ReasonRequiredError ||
     error instanceof DonationTypeNotAllowedError ||
-    error instanceof ExecutorInfoInvalidError
+    error instanceof ExecutorInfoInvalidError ||
+    error instanceof ServiceRecordHasDeliveryError
   ) {
     return 422;
   }

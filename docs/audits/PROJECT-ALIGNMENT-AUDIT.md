@@ -13,7 +13,7 @@ Estado real verificado no código:
 - FASE 0 (fundação) concluída. FASE 1 (ATD) concluída: RF-ATD-01/02/03/04/05/07/08 implementados, RF-ATD-06 parcial.
 - FASE 2 (CAD) em andamento e é a principal novidade desde a auditoria anterior (que marcava CAD como "não iniciado"): o núcleo de família, pessoa e vínculo existe e funciona — RF-CAD-01/03/11 implementados; RF-CAD-02/04/05/06/08/09 parciais; RF-CAD-07/10 não implementados.
 - FASE 3 (EST), FASE 4 (BAZ), FASE 5 (ENT) seguem em scaffold: tabelas `id/timestamps` sem comportamento, sem rotas, sem testes.
-- ACS/AUD parciais com divergências declaradas (transporte Bearer+localStorage vs cookie+Redis; papéis divergentes). REL-05/06 não implementados e sem fonte de dados (EST/ENT vazios).
+- ACS/AUD parciais com divergências declaradas (transporte Bearer+localStorage vs cookie+Redis; papéis divergentes). RF-ACS-01–07 seguem como dívida técnica (fora do escopo da FASE 6). REL-05/06 implementados na FASE 6 (relatórios de leitura sobre EST/ENT; `queryFingerprint` simplificado, fingerprint por revisão individual como evolução).
 - Testes: 13 arquivos, 82 casos `it`, todos no backend; zero no frontend. Cobrem bem ATD e mapeamento HTTP CAD/ATD, mas não cobrem use-cases CAD de aplicação, matriz de autorização, idempotência, concorrência real ou contratos futuros.
 
 Divergência central antiga (D1: código AD vs documentos MVP/FRQ) continua resolvida. Restam D2 (auth transporte), D3 (papéis) e novas divergências CAD documentadas abaixo.
@@ -101,7 +101,7 @@ Legenda: IMPLEMENTADO = comportamento + persistência + rota + teste. PARCIAL = 
 | ACS login | PARCIAL | `POST /auth/login`, `GET /auth/me`, Bearer; sem cookie/Redis, sem gestão contas |
 | ACS contas/perfis/sessão | NÃO IMPLEMENTADO / CONTRADITÓRIO | Papéis código ≠ SPEC; sem UserAccount/Role/Session |
 | AUD escrita | PARCIAL | Atômica local ATD/CAD; modelo dual divergente; sem consulta |
-| REL-05/06 | NÃO IMPLEMENTADO | Sem rotas/páginas; sem fonte EST/ENT |
+| REL-05/06 | IMPLEMENTADO (FASE 6) | `StockMovementReport/DeliveryReportUseCase` + `PrismaReportRepository` (leitura) + `GET /reports/stock-movements|deliveries` (+`/records` com `queryFingerprint` simplificado e `409 REPORT_CHANGED`) + páginas `/reports/*` com CSV no cliente; sem gestão de contas ACS (RF-ACS-01–07 seguem como dívida técnica) |
 | FIC/ATV-PERIODIC/FRQ/APT/MIG | FORA DESTE REPOSITÓRIO | Via gateway apenas |
 
 ## 6. Matriz de rastreabilidade
@@ -250,3 +250,12 @@ api/src/features/registration/ (entities, use-cases, routes families/persons, re
 4. Contrato real de aptidão (FRQ/Fabrício) continua pendente para ENT-02/06; `PendingEligibilityGateway` correto por enquanto.
 5. `traceability.md` e `specs/README.md` §4/§7 estão com snapshots desatualizados (CAD "não iniciado", ATD "em andamento", REL corpo invertido) — atualizá-los após esta auditoria evita leitura errada de progresso.
 6. Sexo/CPF/locationType divergentes da SPEC podem travar cadastros reais se DEC-01 for mais permissiva que o código.
+
+## 17. Dívidas técnicas conhecidas (pós-protótipo)
+
+- RF-ACS-01–07: auth usa Bearer+localStorage em vez de httpOnly cookie + Redis. Roles divergem do SPEC-ACS. Resolver antes de uso com dados reais (DEC-08/LAC-08).
+- queryFingerprint individual: implementação atual usa max(updatedAt) das fontes. SPEC-REL §3 exige fingerprint por revisão individual. Registrado como evolução futura.
+- RF-CAD-07/08/09/10: DataQualityIssue, busca de duplicidades e unificação de identidade deferidos.
+- ChangeHolderUseCase, TransferMembershipUseCase: deferidos para integração com BC do Fabrício.
+- EligibilityGateway: PendingEligibilityGateway retorna sempre PENDING (correto — RN-18/LAC-01). Substituir quando FRQ/APT entregar o contrato real.
+- LAC-01, LAC-03, LAC-06, LAC-07, LAC-13: lacunas da ERS ainda abertas. Decisões institucionais pendentes.

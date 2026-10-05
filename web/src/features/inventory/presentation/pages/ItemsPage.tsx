@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ConfirmModal } from "../../../../shared/presentation/components/ConfirmModal.js";
 import { deactivateItem, listCategories, listItems, updateItem, type InventoryItem } from "../api/inventory.api.js";
 
 export function ItemsPage() {
@@ -10,6 +11,8 @@ export function ItemsPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<InventoryItem | null>(null);
 
   async function load(): Promise<void> {
     setLoading(true);
@@ -36,12 +39,12 @@ export function ItemsPage() {
     void init();
   }, []);
 
-  async function handleDeactivate(item: InventoryItem): Promise<void> {
-    const reason = window.prompt("Motivo da desativação (mín. 3 letras):", "Sem uso");
-    if (!reason || reason.trim().length < 3) return;
+  async function handleDeactivate(values: Record<string, string>): Promise<void> {
+    if (!deactivateTarget) return;
     setLoading(true);
     try {
-      await deactivateItem(item.itemId, { reason: reason.trim(), expectedRevision: item.revision });
+      await deactivateItem(deactivateTarget.itemId, { reason: values.reason ?? "", expectedRevision: deactivateTarget.revision });
+      setDeactivateTarget(null);
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
@@ -50,12 +53,17 @@ export function ItemsPage() {
     }
   }
 
-  async function handleRename(item: InventoryItem): Promise<void> {
-    const name = window.prompt("Novo nome:", item.name);
-    if (!name || name.trim() === item.name) return;
+  async function handleEdit(values: Record<string, string>): Promise<void> {
+    if (!editTarget) return;
     setLoading(true);
     try {
-      await updateItem(item.itemId, { name: name.trim(), reason: "Correção de nome", expectedRevision: item.revision });
+      await updateItem(editTarget.itemId, {
+        description: values.description === "" ? null : (values.description ?? null),
+        name: values.name && values.name !== editTarget.name ? values.name : undefined,
+        reason: values.reason ?? "",
+        expectedRevision: editTarget.revision,
+      });
+      setEditTarget(null);
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
@@ -94,8 +102,9 @@ export function ItemsPage() {
                 <td className="pr-2">{item.requiresExpiration ? "✓" : "✗"}</td>
                 <td className="pr-2">{item.isActive ? "Ativo" : "Inativo"}</td>
                 <td className="flex gap-2">
-                  <button type="button" onClick={() => void handleRename(item)} className="text-blue-700 underline">Editar</button>
-                  {item.isActive ? <button type="button" onClick={() => void handleDeactivate(item)} className="text-red-700 underline">Desativar</button> : null}
+                  <Link to={`/inventory/items/${item.itemId}/movements`} className="text-blue-700 underline">Movimentos</Link>
+                  <button type="button" onClick={() => setEditTarget(item)} className="text-blue-700 underline">Editar</button>
+                  {item.isActive ? <button type="button" onClick={() => setDeactivateTarget(item)} className="text-red-700 underline">Desativar</button> : null}
                 </td>
               </tr>
             ))}
@@ -103,6 +112,27 @@ export function ItemsPage() {
           </tbody>
         </table>
       </div>
+      <ConfirmModal
+        open={editTarget !== null}
+        title={`Editar item — ${editTarget?.name ?? ""}`}
+        fields={[
+          { defaultValue: editTarget?.name ?? "", label: "Nome", name: "name", required: true, type: "text" },
+          { defaultValue: editTarget?.description ?? "", label: "Descrição", name: "description", type: "textarea" },
+          { label: "Motivo (mín 3 caracteres)", minLength: 3, name: "reason", required: true, type: "text" },
+        ]}
+        confirmLabel="Salvar"
+        onCancel={() => setEditTarget(null)}
+        onConfirm={(values) => void handleEdit(values)}
+      />
+      <ConfirmModal
+        open={deactivateTarget !== null}
+        title={`Desativar item — ${deactivateTarget?.name ?? ""}`}
+        fields={[{ label: "Motivo (mín 3 caracteres)", minLength: 3, name: "reason", required: true, type: "textarea" }]}
+        confirmLabel="Desativar"
+        danger
+        onCancel={() => setDeactivateTarget(null)}
+        onConfirm={(values) => void handleDeactivate(values)}
+      />
     </div>
   );
 }

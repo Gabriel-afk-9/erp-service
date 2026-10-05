@@ -1,17 +1,10 @@
 import { get, post } from "../../../../shared/application/api-client";
+import { parseApiError as readApiError } from "../../../../shared/application/api-error.js";
 
 interface Envelope {
   data?: unknown;
   code?: string;
   message?: string;
-}
-
-export function readApiError(result: unknown): string {
-  const envelope = result as Envelope;
-  if (typeof envelope?.code === "string") {
-    return envelope.message ? `${envelope.code}: ${envelope.message}` : envelope.code;
-  }
-  return "Erro inesperado";
 }
 
 export interface DeliveryListItem {
@@ -50,6 +43,29 @@ export async function listDeliveries(familyId?: string): Promise<{ deliveries: D
   const data = result.data as { deliveries?: DeliveryListItem[] } | undefined;
   if (!data || !Array.isArray(data.deliveries)) throw new Error(readApiError(result));
   return { deliveries: data.deliveries };
+}
+
+export interface DeliveryDetail {
+  deliveryId: string;
+  serviceRecordId: string;
+  familyId: string;
+  eligibilityStatus: string;
+  occurredAt: string;
+  collectedByPersonId: string | null;
+  executorName: string;
+  executorRole: string;
+  exceptionReason: string | null;
+  authorizedBy: string | null;
+  status: string;
+  reversal: { reversalId: string; reason: string } | null;
+  lines: { lineId: string; stockLotId: string; quantity: number }[];
+}
+
+export async function getDelivery(deliveryId: string): Promise<DeliveryDetail> {
+  const result = (await get(`/deliveries/${encodeURIComponent(deliveryId)}`)) as Envelope;
+  const data = result.data as DeliveryDetail | undefined;
+  if (!data || typeof data.deliveryId !== "string") throw new Error(readApiError(result));
+  return data;
 }
 
 export async function confirmDelivery(input: {

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ConfirmModal } from "../../../../shared/presentation/components/ConfirmModal.js";
 import { addFamilyMember, closeMembership, correctFamily, getFamily, type FamilyDetail } from "../api/families.api.js";
 import { searchPersons } from "../api/persons.api.js";
+import { listDeliveries, type DeliveryListItem } from "../../../deliveries/presentation/api/deliveries.api.js";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -14,15 +16,15 @@ export function FamilyDetailPage() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editReason, setEditReason] = useState("");
-  const [editFields, setEditFields] = useState({ referenceName: "", address: "", neighborhood: "", postalCode: "", contactPhone: "" });
+  const [editFields, setEditFields] = useState({ referenceName: "", address: "", neighborhood: "", postalCode: "", contactPhone: "", locationType: "URBAN" });
   const [addQuery, setAddQuery] = useState("");
   const [addResults, setAddResults] = useState<{ personId: string; name: string; currentFamilyCode: string | null }[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [validFrom, setValidFrom] = useState(today());
+  const [relationship, setRelationship] = useState("");
   const [isReference, setIsReference] = useState(false);
   const [closureTarget, setClosureTarget] = useState<string | null>(null);
-  const [closureUntil, setClosureUntil] = useState(today());
-  const [closureReason, setClosureReason] = useState("");
+  const [deliveries, setDeliveries] = useState<DeliveryListItem[]>([]);
 
   async function load(): Promise<void> {
     if (!id) return;
@@ -36,7 +38,13 @@ export function FamilyDetailPage() {
         neighborhood: data.neighborhood ?? "",
         postalCode: data.postalCode ?? "",
         contactPhone: data.contactPhone ?? "",
+        locationType: data.locationType,
       });
+      try {
+        setDeliveries((await listDeliveries(id)).deliveries);
+      } catch {
+        setDeliveries([]);
+      }
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -57,6 +65,7 @@ export function FamilyDetailPage() {
         address: editFields.address.trim() || null,
         neighborhood: editFields.neighborhood.trim() || null,
         postalCode: editFields.postalCode.trim() || null,
+        locationType: editFields.locationType === "RURAL" ? "RURAL" : "URBAN",
         contactPhone: editFields.contactPhone.trim() || null,
         reason: editReason.trim(),
         expectedRevision: family.revision,
@@ -84,7 +93,7 @@ export function FamilyDetailPage() {
     if (!family || !selectedPersonId) return;
     setLoading(true);
     try {
-      await addFamilyMember(family.familyId, { personId: selectedPersonId, validFrom, isReference });
+      await addFamilyMember(family.familyId, { personId: selectedPersonId, validFrom, relationshipToReference: relationship.trim() || null, isReference });
       setSelectedPersonId("");
       setAddQuery("");
       setAddResults([]);
@@ -96,15 +105,14 @@ export function FamilyDetailPage() {
     }
   }
 
-  async function handleClosure(): Promise<void> {
+  async function handleClosure(values: Record<string, string>): Promise<void> {
     if (!closureTarget || !family) return;
     const target = family.members.find((m) => m.membershipId === closureTarget);
     if (!target) return;
     setLoading(true);
     try {
-      await closeMembership(closureTarget, { validUntil: closureUntil, reason: closureReason.trim(), expectedRevision: target.revision });
+      await closeMembership(closureTarget, { validUntil: values.validUntil ?? today(), reason: values.reason ?? "", expectedRevision: target.revision });
       setClosureTarget(null);
-      setClosureReason("");
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
@@ -135,6 +143,10 @@ export function FamilyDetailPage() {
             <input className="rounded border px-2 py-1 text-sm" placeholder="Bairro" value={editFields.neighborhood} onChange={(e) => setEditFields({ ...editFields, neighborhood: e.target.value })} />
             <input className="rounded border px-2 py-1 text-sm" placeholder="CEP" value={editFields.postalCode} onChange={(e) => setEditFields({ ...editFields, postalCode: e.target.value })} />
             <input className="rounded border px-2 py-1 text-sm" placeholder="Telefone" value={editFields.contactPhone} onChange={(e) => setEditFields({ ...editFields, contactPhone: e.target.value })} />
+            <select className="rounded border px-2 py-1 text-sm" value={editFields.locationType} onChange={(e) => setEditFields({ ...editFields, locationType: e.target.value })}>
+              <option value="URBAN">Urbano</option>
+              <option value="RURAL">Rural</option>
+            </select>
             <input className="rounded border px-2 py-1 text-sm" placeholder="Motivo (mín 3)" value={editReason} onChange={(e) => setEditReason(e.target.value)} />
             <button type="button" disabled={loading || editReason.trim().length < 3} onClick={() => void handleCorrect()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white">Salvar correção</button>
           </div>
@@ -182,26 +194,42 @@ export function FamilyDetailPage() {
             ))}
           </select>
         ) : null}
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <input type="date" className="rounded border px-2 py-1 text-sm" value={validFrom} max={today()} onChange={(e) => setValidFrom(e.target.value)} />
+          <input className="rounded border px-2 py-1 text-sm" placeholder="Parentesco com titular" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
           <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={isReference} onChange={(e) => setIsReference(e.target.checked)} /> Titular</label>
           <button type="button" disabled={loading || !selectedPersonId} onClick={() => void handleAddMember()} className="rounded bg-gray-800 px-3 py-1 text-sm text-white">Adicionar</button>
         </div>
         <Link to={`/persons/new?familyId=${family.familyId}`} className="mt-3 inline-block text-sm text-blue-700 underline">+ Cadastrar nova pessoa nesta família</Link>
       </div>
-      {closureTarget ? (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="w-80 rounded bg-white p-4 shadow">
-            <h3 className="mb-2 font-semibold">Encerrar vínculo</h3>
-            <label className="block text-sm">Data de encerramento<input type="date" className="mt-1 w-full rounded border px-2 py-1" value={closureUntil} onChange={(e) => setClosureUntil(e.target.value)} /></label>
-            <label className="mt-2 block text-sm">Motivo<input className="mt-1 w-full rounded border px-2 py-1" value={closureReason} onChange={(e) => setClosureReason(e.target.value)} /></label>
-            <div className="mt-3 flex gap-2">
-              <button type="button" disabled={loading || closureReason.trim().length < 3} onClick={() => void handleClosure()} className="rounded bg-red-700 px-4 py-2 text-sm text-white">Confirmar</button>
-              <button type="button" onClick={() => setClosureTarget(null)} className="rounded bg-gray-200 px-4 py-2 text-sm">Voltar</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmModal
+        open={closureTarget !== null}
+        title="Encerrar vínculo"
+        fields={[
+          { label: "Data de encerramento", name: "validUntil", required: true, type: "text", defaultValue: today() },
+          { label: "Motivo (mín 3 caracteres)", minLength: 3, name: "reason", required: true, type: "textarea" },
+        ]}
+        confirmLabel="Confirmar"
+        danger
+        onCancel={() => setClosureTarget(null)}
+        onConfirm={(values) => void handleClosure(values)}
+      />
+      <div className="mt-6 rounded bg-white p-4 shadow">
+        <h3 className="font-semibold">Entregas</h3>
+        <table className="mt-3 w-full text-sm">
+          <thead><tr className="text-left"><th className="pr-2">Data</th><th className="pr-2">Status</th><th>Ações</th></tr></thead>
+          <tbody>
+            {deliveries.map((delivery) => (
+              <tr key={delivery.deliveryId} className="border-t">
+                <td className="pr-2">{delivery.occurredAt.slice(0, 10)}</td>
+                <td className="pr-2">{delivery.status === "COMPLETED" ? "Concluída" : "Estornada"}</td>
+                <td><Link to={`/deliveries/${delivery.deliveryId}`} className="text-blue-700 underline">Ver</Link></td>
+              </tr>
+            ))}
+            {deliveries.length === 0 ? <tr><td colSpan={3} className="py-4 text-center text-gray-500">Nenhuma entrega registrada</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

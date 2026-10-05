@@ -106,7 +106,7 @@ export function PersonDetailPage() {
             <input className="rounded border px-3 py-2 text-sm" placeholder="Escolaridade" value={editFields.educationLevel} onChange={(e) => setEditFields({ ...editFields, educationLevel: e.target.value })} />
             <input className="rounded border px-3 py-2 text-sm" placeholder="Motivo da correção (mín. 3 letras)" value={editReason} onChange={(e) => setEditReason(e.target.value)} />
             <div className="flex gap-2">
-              <button type="button" onClick={() => void handleCorrect()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
+              <button type="button" onClick={() => void handleCorrect()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading || editReason.trim().length < 3}>
                 Salvar
               </button>
               <button type="button" onClick={() => setEditing(false)} className="rounded bg-gray-200 px-4 py-2 text-sm">

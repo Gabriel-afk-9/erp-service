@@ -1,17 +1,10 @@
 import { get, patch, post } from "../../../../shared/application/api-client";
+import { parseApiError as readApiError } from "../../../../shared/application/api-error.js";
 
 interface Envelope {
   data?: unknown;
   code?: string;
   message?: string;
-}
-
-export function readApiError(result: unknown): string {
-  const envelope = result as Envelope;
-  if (typeof envelope?.code === "string") {
-    return envelope.message ? `${envelope.code}: ${envelope.message}` : envelope.code;
-  }
-  return "Erro inesperado";
 }
 
 export interface CategoryItem {
@@ -134,7 +127,173 @@ export async function updateItem(itemId: string, input: { name?: string; descrip
   if (result.data === undefined && result.code) throw new Error(readApiError(result));
 }
 
+export async function getItem(itemId: string): Promise<{ itemId: string; name: string; unitId: string; unitSymbol: string; requiresExpiration: boolean }> {
+  const result = (await get(`/inventory/items/${encodeURIComponent(itemId)}`)) as Envelope;
+  const data = result.data as { itemId?: string; name?: string; unit?: { unitId?: string; symbol?: string }; requiresExpiration?: boolean } | undefined;
+  if (!data || typeof data.itemId !== "string" || typeof data.name !== "string") throw new Error(readApiError(result));
+  return { itemId: data.itemId, name: data.name, unitId: data.unit?.unitId ?? "", unitSymbol: data.unit?.symbol ?? "", requiresExpiration: data.requiresExpiration ?? false };
+}
+
 export async function deactivateItem(itemId: string, input: { reason: string; expectedRevision: number }): Promise<void> {
   const result = (await post(`/inventory/items/${encodeURIComponent(itemId)}/deactivation`, input)) as Envelope;
   if (result.data === undefined && result.code) throw new Error(readApiError(result));
+}
+
+export interface ReceiptLineDetail {
+  lineId: string;
+  itemId: string;
+  itemName: string;
+  unitSymbol: string;
+  informedQuantity: number | null;
+  receivedQuantity: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  rejectionReason: string | null;
+  expiresOn: string | null;
+  lotId: string | null;
+}
+
+export interface ReceiptDetail {
+  receiptId: string;
+  originType: string;
+  donorName: string | null;
+  receivedBy: string;
+  receivedAt: string;
+  note: string | null;
+  lines: ReceiptLineDetail[];
+}
+
+export interface ReceiptListItem {
+  receiptId: string;
+  originType: string;
+  donorName: string | null;
+  receivedAt: string;
+}
+
+export async function listReceipts(params: { from?: string; to?: string; originType?: string }): Promise<{ receipts: ReceiptListItem[] }> {
+  const qs = new URLSearchParams();
+  if (params.from) qs.set("from", params.from);
+  if (params.to) qs.set("to", params.to);
+  if (params.originType) qs.set("originType", params.originType);
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  const result = (await get(`/inventory/receipts${suffix}`)) as Envelope;
+  const data = result.data as { receipts?: ReceiptListItem[] } | undefined;
+  if (!data || !Array.isArray(data.receipts)) throw new Error(readApiError(result));
+  return { receipts: data.receipts };
+}
+
+export async function getReceipt(receiptId: string): Promise<ReceiptDetail> {
+  const result = (await get(`/inventory/receipts/${encodeURIComponent(receiptId)}`)) as Envelope;
+  const data = result.data as ReceiptDetail | undefined;
+  if (!data || typeof data.receiptId !== "string") throw new Error(readApiError(result));
+  return data;
+}
+
+export async function confirmReceipt(input: {
+  originType: string;
+  donorName?: string | null;
+  receivedAt: string;
+  note?: string | null;
+  operationKey: string;
+  lines: { itemId: string; informedQuantity?: number | null; receivedQuantity: number; acceptedQuantity: number; rejectedQuantity: number; rejectionReason?: string | null; expiresOn?: string | null }[];
+}): Promise<{ receiptId: string }> {
+  const result = (await post("/inventory/receipts", input)) as Envelope;
+  const data = result.data as { receiptId?: string } | undefined;
+  if (!data || typeof data.receiptId !== "string") throw new Error(readApiError(result));
+  return { receiptId: data.receiptId };
+}
+
+export interface BalanceRow {
+  itemId: string;
+  name: string;
+  categoryName: string;
+  unitSymbol: string;
+  requiresExpiration: boolean;
+  isActive: boolean;
+  onHand: number;
+  available: number;
+}
+
+export async function listBalances(params: { q?: string; categoryId?: string; referenceDate?: string }): Promise<{ items: BalanceRow[] }> {
+  const qs = new URLSearchParams();
+  if (params.q) qs.set("q", params.q);
+  if (params.categoryId) qs.set("categoryId", params.categoryId);
+  if (params.referenceDate) qs.set("referenceDate", params.referenceDate);
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  const result = (await get(`/inventory/balance${suffix}`)) as Envelope;
+  const data = result.data as { items?: BalanceRow[] } | undefined;
+  if (!data || !Array.isArray(data.items)) throw new Error(readApiError(result));
+  return { items: data.items };
+}
+
+export async function adjustStock(input: { itemId: string; lotId?: string | null; quantity: number; direction: "IN" | "OUT"; reason: string; operationKey: string }): Promise<void> {
+  const result = (await post("/inventory/adjustments", input)) as Envelope;
+  if (result.data === undefined && result.code) throw new Error(readApiError(result));
+}
+
+export interface ItemMovementRow {
+  movementId: string;
+  type: string;
+  quantity: number;
+  balanceDelta: number;
+  balanceAfter: number;
+  occurredAt: string;
+  lotId: string | null;
+}
+
+export async function getItemMovements(itemId: string, to?: string): Promise<{ itemId: string; movements: ItemMovementRow[] }> {
+  const suffix = to ? `?to=${encodeURIComponent(to)}` : "";
+  const result = (await get(`/inventory/items/${encodeURIComponent(itemId)}/movements${suffix}`)) as Envelope;
+  const data = result.data as { itemId?: string; movements?: ItemMovementRow[] } | undefined;
+  if (!data || !Array.isArray(data.movements)) throw new Error(readApiError(result));
+  return { itemId: data.itemId ?? itemId, movements: data.movements };
+}
+
+export interface BazarTransferLineDetail {
+  lineId: string;
+  itemId: string;
+  itemName: string;
+  informedQuantity: number | null;
+  receivedQuantity: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  divergence: number | null;
+  lotId: string | null;
+}
+
+export interface BazarTransferDetail {
+  transferId: string;
+  externalReference: string;
+  receiptId: string;
+  receivedAt: string;
+  donorName: string | null;
+  lines: BazarTransferLineDetail[];
+}
+
+export async function getBazarTransfer(transferId: string): Promise<BazarTransferDetail> {
+  const result = (await get(`/inventory/bazar-transfers/${encodeURIComponent(transferId)}`)) as Envelope;
+  const data = result.data as BazarTransferDetail | undefined;
+  if (!data || typeof data.transferId !== "string") throw new Error(readApiError(result));
+  return data;
+}
+
+export async function createStockCount(input: { conductedAt?: string; note?: string | null }): Promise<{ countId: string; lineCount: number }> {
+  const result = (await post("/inventory/counts", input)) as Envelope;
+  const data = result.data as { countId?: string; lineCount?: number } | undefined;
+  if (!data || typeof data.countId !== "string") throw new Error(readApiError(result));
+  return { countId: data.countId, lineCount: data.lineCount ?? 0 };
+}
+
+export async function recordCountLine(countId: string, input: { lotId?: string | null; itemId?: string; unitId?: string; expiresOn?: string | null; countedQuantity: number }): Promise<{ lineId: string; variance: number }> {
+  const result = (await post(`/inventory/counts/${encodeURIComponent(countId)}/lines`, input)) as Envelope;
+  const data = result.data as { lineId?: string; variance?: number } | undefined;
+  if (!data || typeof data.lineId !== "string") throw new Error(readApiError(result));
+  return { lineId: data.lineId, variance: data.variance ?? 0 };
+}
+
+export async function closeStockCount(countId: string, closedAt?: string): Promise<{ countId: string; adjustments: number }> {
+  const result = (await post(`/inventory/counts/${encodeURIComponent(countId)}/closure`, closedAt ? { closedAt } : {})) as Envelope;
+  const data = result.data as { countId?: string; adjustments?: number } | undefined;
+  if (!data || typeof data.countId !== "string") throw new Error(readApiError(result));
+  return { countId: data.countId, adjustments: data.adjustments ?? 0 };
 }

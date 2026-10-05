@@ -1,17 +1,10 @@
 import { get } from "../../../../shared/application/api-client";
+import { parseApiError as readApiError } from "../../../../shared/application/api-error.js";
 
 interface Envelope {
   data?: unknown;
   code?: string;
   message?: string;
-}
-
-export function readApiError(result: unknown): string {
-  const envelope = result as Envelope;
-  if (typeof envelope?.code === "string") {
-    return envelope.message ? `${envelope.code}: ${envelope.message}` : envelope.code;
-  }
-  return "Erro inesperado";
 }
 
 export interface StockMovementRow {
@@ -79,4 +72,18 @@ export async function fetchDeliveryReport(params: Record<string, string | undefi
   const data = result.data as DeliveryReport | undefined;
   if (!data || typeof data.queryFingerprint !== "string") throw new Error(readApiError(result));
   return data;
+}
+
+export async function fetchStockRecords(params: Record<string, string | undefined>): Promise<StockReport & { page: number; pageSize: number; total: number }> {
+  const result = (await get(`/reports/stock-movements/records?${toQuery(params)}`)) as Envelope;
+  const data = result.data as (StockReport & { page?: number; pageSize?: number; total?: number }) | undefined;
+  if (!data || typeof data.queryFingerprint !== "string" || typeof data.total !== "number") throw new Error(readApiError(result));
+  return data as StockReport & { page: number; pageSize: number; total: number };
+}
+
+export async function fetchDeliveryRecords(params: Record<string, string | undefined>): Promise<DeliveryReport & { page: number; pageSize: number; total: number }> {
+  const result = (await get(`/reports/deliveries/records?${toQuery(params)}`)) as Envelope;
+  const data = result.data as (DeliveryReport & { page?: number; pageSize?: number; total?: number }) | undefined;
+  if (!data || typeof data.queryFingerprint !== "string" || typeof data.total !== "number") throw new Error(readApiError(result));
+  return data as DeliveryReport & { page: number; pageSize: number; total: number };
 }

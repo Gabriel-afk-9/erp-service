@@ -1,21 +1,34 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
 import { searchFamilies, type FamilyListItem } from "../api/families.api.js";
 import { translateRegistrationError } from "../api/registration-errors.js";
 
+const PAGE_SIZE = 20;
+
 export function FamiliesPage() {
   const [q, setQ] = useState("");
+  const [code, setCode] = useState("");
+  const [page, setPage] = useState(1);
   const [items, setItems] = useState<FamilyListItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  async function load(query: string): Promise<void> {
+  async function load(query: string, familyCode: string, targetPage: number): Promise<void> {
     setLoading(true);
     setFeedback(null);
     try {
       const trimmed = query.trim();
-      const result = await searchFamilies({ q: trimmed === "" ? undefined : trimmed });
+      const result = await searchFamilies({
+        code: familyCode.trim() || undefined,
+        page: targetPage,
+        pageSize: PAGE_SIZE,
+        q: trimmed === "" ? undefined : trimmed,
+      });
       setItems(result.items);
+      setTotal(result.total);
+      setPage(result.page);
     } catch (error) {
       setFeedback(translateRegistrationError(error));
     } finally {
@@ -24,7 +37,7 @@ export function FamiliesPage() {
   }
 
   useEffect(() => {
-    void load("");
+    void load("", "", 1);
   }, []);
 
   return (
@@ -42,46 +55,39 @@ export function FamiliesPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q);
+            if (e.key === "Enter") void load(q, code, 1);
           }}
         />
-        <button type="button" onClick={() => void load(q)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
+        <input
+          className="w-48 rounded border px-3 py-2"
+          placeholder="Código exato"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void load(q, code, 1);
+          }}
+        />
+        <button type="button" onClick={() => void load(q, code, 1)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
           Buscar
         </button>
       </div>
       {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
       <div className="mt-4 rounded bg-white p-4 shadow">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left">
-              <th className="pr-2">Código</th>
-              <th className="pr-2">Referência</th>
-              <th className="pr-2">Bairro</th>
-              <th className="pr-2">Membros</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((family) => (
-              <tr key={family.familyId} className="border-t">
-                <td className="pr-2">
-                  <Link to={`/families/${family.familyId}`} className="text-blue-700 underline">
-                    {family.code}
-                  </Link>
-                </td>
-                <td className="pr-2">{family.referenceName ?? "—"}</td>
-                <td className="pr-2">{family.neighborhood ?? "—"}</td>
-                <td className="pr-2">{family.memberCount}</td>
-              </tr>
-            ))}
-            {items.length === 0 && !loading ? (
-              <tr>
-                <td colSpan={4} className="py-4 text-center text-gray-500">
-                  Nenhuma família encontrada
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+        <DataTable
+          columns={[
+            { key: "code", label: "Código", render: (row) => <Link to={`/families/${(row as FamilyListItem).familyId}`} className="text-blue-700 underline">{(row as FamilyListItem).code}</Link> },
+            { key: "referenceName", label: "Referência", render: (row) => (row as FamilyListItem).referenceName ?? "—" },
+            { key: "neighborhood", label: "Bairro", render: (row) => (row as FamilyListItem).neighborhood ?? "—" },
+            { key: "memberCount", label: "Membros", render: (row) => String((row as FamilyListItem).memberCount) },
+          ]}
+          rows={items}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          onPageChange={(next) => void load(q, code, next)}
+          loading={loading}
+          emptyMessage="Nenhuma família encontrada"
+        />
       </div>
     </div>
   );

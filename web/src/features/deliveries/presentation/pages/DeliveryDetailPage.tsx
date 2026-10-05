@@ -1,43 +1,39 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { get } from "../../../../shared/application/api-client";
-
-interface DeliveryDetail {
-  deliveryId: string;
-  serviceRecordId: string;
-  familyId: string;
-  eligibilityStatus: string;
-  occurredAt: string;
-  collectedByPersonId: string | null;
-  executorName: string;
-  executorRole: string;
-  exceptionReason: string | null;
-  authorizedBy: string | null;
-  status: string;
-  reversal: { reversalId: string; reason: string } | null;
-  lines: { lineId: string; stockLotId: string; quantity: number }[];
-}
+import { getFamily } from "../../../registration/presentation/api/families.api.js";
+import { getDelivery, type DeliveryDetail } from "../api/deliveries.api.js";
 
 export function DeliveryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [detail, setDetail] = useState<DeliveryDetail | null>(null);
+  const [familyName, setFamilyName] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load(): Promise<void> {
       if (!id) return;
+      setLoading(true);
       try {
-        const result = (await get(`/deliveries/${encodeURIComponent(id)}`)) as { data?: DeliveryDetail };
-        if (!result.data || typeof result.data.deliveryId !== "string") throw new Error("Entrega não encontrada");
-        setDetail(result.data);
+        const loaded = await getDelivery(id);
+        setDetail(loaded);
+        try {
+          const family = await getFamily(loaded.familyId);
+          setFamilyName(`${family.referenceName ?? "Sem nome"} (${family.code})`);
+        } catch {
+          setFamilyName(loaded.familyId);
+        }
       } catch (error) {
         setFeedback(error instanceof Error ? error.message : "Erro inesperado");
+      } finally {
+        setLoading(false);
       }
     }
     void load();
   }, [id]);
 
-  if (!detail) return <p className="text-sm text-red-700">{feedback ?? "Carregando..."}</p>;
+  if (loading) return <p className="text-sm text-gray-600">Carregando...</p>;
+  if (!detail) return <p className="text-sm text-red-700">{feedback ?? "Entrega não encontrada"}</p>;
 
   return (
     <div>
@@ -45,6 +41,7 @@ export function DeliveryDetailPage() {
       <h2 className="mt-2 text-xl font-bold">Entrega {detail.occurredAt.slice(0, 10)}</h2>
       <div className="mt-4 rounded bg-white p-4 shadow">
         <dl className="grid gap-2 text-sm">
+          <div><dt className="font-bold">Família</dt><dd>{familyName ?? detail.familyId}</dd></div>
           <div><dt className="font-bold">Status</dt><dd>{detail.status === "COMPLETED" ? "Concluída" : "Estornada"}</dd></div>
           <div><dt className="font-bold">Aptidão</dt><dd>{detail.eligibilityStatus}</dd></div>
           <div><dt className="font-bold">Executor</dt><dd>{detail.executorName} — {detail.executorRole}</dd></div>

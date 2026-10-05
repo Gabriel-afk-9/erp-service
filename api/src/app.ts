@@ -7,6 +7,7 @@ import { usersFixture } from "./shared/infrastructure/gateways/fixtures/users.fi
 import { makeAuthenticateMiddleware } from "./shared/presentation/middleware/authenticate.middleware.js";
 import { authorize } from "./shared/presentation/middleware/authorize.middleware.js";
 import { registerAuthRoutes } from "./shared/presentation/routes/auth.routes.js";
+import { registerActivityRoutes } from "./shared/presentation/routes/activities.routes.js";
 import { PrismaRegistryGateway } from "./shared/infrastructure/gateways/prisma-registry.gateway.js";
 import { PrismaFamilyRepository } from "./features/registration/infrastructure/repositories/prisma-family.repository.js";
 import { PrismaMembershipRepository } from "./features/registration/infrastructure/repositories/prisma-membership.repository.js";
@@ -115,6 +116,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   await registerAuthRoutes(app, auth);
+  await registerActivityRoutes(app, activity);
 
   const authenticate = makeAuthenticateMiddleware(auth);
   app.addHook("onRequest", async (request, reply) => {

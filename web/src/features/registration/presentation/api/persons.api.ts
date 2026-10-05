@@ -1,4 +1,5 @@
 import { get, patch, post } from "../../../../shared/application/api-client";
+import { parseApiError as readApiError } from "../../../../shared/application/api-error.js";
 
 export interface PersonListItem {
   personId: string;
@@ -14,17 +15,12 @@ interface Envelope {
   message?: string;
 }
 
-export function readApiError(result: unknown): string {
-  const envelope = result as Envelope;
-  if (typeof envelope?.code === "string") {
-    return envelope.message ? `${envelope.code}: ${envelope.message}` : envelope.code;
-  }
-  return "Erro inesperado";
-}
-
-export async function searchPersons(params: { q?: string; page?: number; pageSize?: number }): Promise<{ items: PersonListItem[]; total: number; page: number; pageSize: number }> {
+export async function searchPersons(params: { q?: string; cpf?: string; familyId?: string; asOf?: string; page?: number; pageSize?: number }): Promise<{ items: PersonListItem[]; total: number; page: number; pageSize: number }> {
   const qs = new URLSearchParams();
   if (params.q) qs.set("q", params.q);
+  if (params.cpf) qs.set("cpf", params.cpf);
+  if (params.familyId) qs.set("familyId", params.familyId);
+  if (params.asOf) qs.set("asOf", params.asOf);
   if (params.page) qs.set("page", String(params.page));
   if (params.pageSize) qs.set("pageSize", String(params.pageSize));
   const suffix = qs.toString() ? `?${qs.toString()}` : "";

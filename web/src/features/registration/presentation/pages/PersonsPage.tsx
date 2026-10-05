@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
 import { searchPersons, type PersonListItem } from "../api/persons.api.js";
 import { translateRegistrationError } from "../api/registration-errors.js";
 
@@ -8,19 +9,31 @@ function formatDate(value: string | null): string {
   return value.slice(0, 10);
 }
 
+const PAGE_SIZE = 20;
+
 export function PersonsPage() {
   const [q, setQ] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [page, setPage] = useState(1);
   const [items, setItems] = useState<PersonListItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  async function load(query: string): Promise<void> {
+  async function load(query: string, cpfFilter: string, targetPage: number): Promise<void> {
     setLoading(true);
     setFeedback(null);
     try {
       const trimmed = query.trim();
-      const result = await searchPersons({ q: trimmed === "" ? undefined : trimmed });
+      const result = await searchPersons({
+        cpf: cpfFilter.trim() || undefined,
+        page: targetPage,
+        pageSize: PAGE_SIZE,
+        q: trimmed === "" ? undefined : trimmed,
+      });
       setItems(result.items);
+      setTotal(result.total);
+      setPage(result.page);
     } catch (error) {
       setFeedback(translateRegistrationError(error));
     } finally {
@@ -29,7 +42,7 @@ export function PersonsPage() {
   }
 
   useEffect(() => {
-    void load("");
+    void load("", "", 1);
   }, []);
 
   return (
@@ -47,46 +60,39 @@ export function PersonsPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q);
+            if (e.key === "Enter") void load(q, cpf, 1);
           }}
         />
-        <button type="button" onClick={() => void load(q)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
+        <input
+          className="w-48 rounded border px-3 py-2"
+          placeholder="CPF"
+          value={cpf}
+          onChange={(e) => setCpf(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void load(q, cpf, 1);
+          }}
+        />
+        <button type="button" onClick={() => void load(q, cpf, 1)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
           Buscar
         </button>
       </div>
       {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
       <div className="mt-4 rounded bg-white p-4 shadow">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left">
-              <th className="pr-2">Nome</th>
-              <th className="pr-2">Nascimento</th>
-              <th className="pr-2">Família atual</th>
-              <th className="pr-2">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((person) => (
-              <tr key={person.personId} className="border-t">
-                <td className="pr-2">{person.name}</td>
-                <td className="pr-2">{formatDate(person.birthDate)}</td>
-                <td className="pr-2">{person.currentFamilyCode ?? "—"}</td>
-                <td className="pr-2">
-                  <Link to={`/persons/${person.personId}`} className="text-blue-700 underline">
-                    Ver
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {items.length === 0 && !loading ? (
-              <tr>
-                <td colSpan={4} className="py-4 text-center text-gray-500">
-                  Nenhuma pessoa encontrada
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+        <DataTable
+          columns={[
+            { key: "name", label: "Nome" },
+            { key: "birthDate", label: "Nascimento", render: (row) => formatDate((row as PersonListItem).birthDate) },
+            { key: "currentFamilyCode", label: "Família atual", render: (row) => (row as PersonListItem).currentFamilyCode ?? "—" },
+            { key: "actions", label: "Ações", render: (row) => <Link to={`/persons/${(row as PersonListItem).personId}`} className="text-blue-700 underline">Ver</Link> },
+          ]}
+          rows={items}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          onPageChange={(next) => void load(q, cpf, next)}
+          loading={loading}
+          emptyMessage="Nenhuma pessoa encontrada"
+        />
       </div>
     </div>
   );

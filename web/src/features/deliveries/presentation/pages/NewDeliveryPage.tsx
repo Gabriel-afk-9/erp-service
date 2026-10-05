@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { confirmDelivery, previewDelivery } from "../api/deliveries.api.js";
+import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
+import { getFamily, searchFamilies } from "../../../registration/presentation/api/families.api.js";
 import { getItemBalance, listItems } from "../../../inventory/presentation/api/inventory.api.js";
+import { confirmDelivery, previewDelivery } from "../api/deliveries.api.js";
 
 interface LotRow {
   lotId: string;
@@ -12,13 +14,13 @@ interface LotRow {
 }
 
 function newOperationKey(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `op-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+  return crypto.randomUUID();
 }
 
 export function NewDeliveryPage() {
   const navigate = useNavigate();
   const [familyId, setFamilyId] = useState("");
+  const [familyLabel, setFamilyLabel] = useState<string | undefined>(undefined);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [eligibility, setEligibility] = useState<string | null>(null);
   const [lots, setLots] = useState<LotRow[]>([]);
@@ -30,29 +32,25 @@ export function NewDeliveryPage() {
   const [loading, setLoading] = useState(false);
 
   async function handlePreview(): Promise<void> {
-    if (!familyId.trim()) {
-      setFeedback("Informe o ID da família.");
+    if (!familyId) {
+      setFeedback("Selecione a família.");
       return;
     }
     setLoading(true);
     try {
-      const preview = await previewDelivery(familyId.trim(), date);
+      const preview = await previewDelivery(familyId, date);
       setEligibility(preview.eligibilityStatus);
       const stock = await listItems({});
+      const balances = await Promise.all(stock.items.map(async (item) => ({ item, lots: (await getItemBalance(item.itemId)).lots })));
       const rows: LotRow[] = [];
-      for (const item of stock.items) {
-        const balance = await getItemBalance(item.itemId);
-        for (const lot of balance.lots) {
+      for (const { item, lots: itemLots } of balances) {
+        for (const lot of itemLots) {
           if (lot.status !== "AVAILABLE" || lot.onHand <= 0) continue;
-          rows.push({ lotId: lot.lotId, itemName: `${item.name}${lot.expiresOn ? ` (vale até ${lot.expiresOn.slice(0, 10)})` : ""}`, unitSymbol: item.unitSymbol, onHand: lot.onHand, quantity: "" });
+          rows.push({ lotId: lot.lotId, itemName: `${item.name}${lot.expiresOn ? ` (vale até ${lot.expiresOn.slice(0, 10)})` : ""}`, onHand: lot.onHand, quantity: "", unitSymbol: item.unitSymbol });
         }
       }
       setLots(rows);
-      if (preview.justificationRequired) {
-        setFeedback(`Aptidão ${preview.eligibilityStatus}: justificativa e autorizador são obrigatórios.`);
-      } else {
-        setFeedback(null);
-      }
+      setFeedback(null);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -66,16 +64,20 @@ export function NewDeliveryPage() {
       setFeedback("Informe a quantidade de ao menos um lote.");
       return;
     }
+    if (exceptionReason.trim().length < 3 || authorizedBy.trim() === "") {
+      setFeedback("Justificativa (mín. 3 letras) e autorizador são obrigatórios.");
+      return;
+    }
     setLoading(true);
     try {
       await confirmDelivery({
-        familyId: familyId.trim(),
-        occurredAt: date,
-        lines,
+        authorizedBy: authorizedBy.trim(),
+        exceptionReason: exceptionReason.trim(),
         executorName: executorName.trim(),
         executorRole: executorRole.trim(),
-        exceptionReason: exceptionReason.trim() || undefined,
-        authorizedBy: authorizedBy.trim() || undefined,
+        familyId,
+        lines,
+        occurredAt: date,
         operationKey: newOperationKey(),
       });
       await navigate("/deliveries");
@@ -91,12 +93,36 @@ export function NewDeliveryPage() {
       <h2 className="text-xl font-bold">Nova entrega</h2>
       {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
       <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
-        <input className="rounded border px-3 py-2 text-sm" placeholder="ID da família" value={familyId} onChange={(e) => setFamilyId(e.target.value)} />
+        <SearchSelect
+          label="Família"
+          placeholder="Digite ao menos 2 letras do nome ou código..."
+          selectedLabel={familyLabel}
+          onSearch={async (query) => {
+            const result = await searchFamilies({ q: query });
+            return result.items.map((item) => ({ id: item.familyId, label: item.referenceName ?? "Sem nome", sublabel: item.code }));
+          }}
+          onSelect={(id) => {
+            setFamilyId(id);
+            void (async () => {
+              try {
+                const family = await getFamily(id);
+                setFamilyLabel(`${family.referenceName ?? "Sem nome"} (${family.code})`);
+              } catch {
+                setFamilyLabel(id);
+              }
+            })();
+          }}
+        />
         <input type="date" className="rounded border px-3 py-2 text-sm" value={date} onChange={(e) => setDate(e.target.value)} />
         <button type="button" onClick={() => void handlePreview()} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>
           Consultar aptidão e saldo
         </button>
-        {eligibility ? <p className="text-sm">Aptidão: <strong>{eligibility}</strong> (toda entrega PENDING exige justificativa)</p> : null}
+        {eligibility ? (
+          <div className="rounded bg-yellow-50 p-2 text-sm">
+            <p>Aptidão: <strong>{eligibility}</strong></p>
+            <p>Esta família está com aptidão Pendente. Justificativa e autorizador são obrigatórios.</p>
+          </div>
+        ) : null}
         {lots.map((lot) => (
           <div key={lot.lotId} className="flex items-center gap-2 border-t pt-2 text-sm">
             <span className="w-full">{lot.itemName} — saldo {lot.onHand} {lot.unitSymbol}</span>
@@ -105,7 +131,7 @@ export function NewDeliveryPage() {
         ))}
         <input className="rounded border px-3 py-2 text-sm" placeholder="Executor (nome)" value={executorName} onChange={(e) => setExecutorName(e.target.value)} />
         <input className="rounded border px-3 py-2 text-sm" placeholder="Executor (função)" value={executorRole} onChange={(e) => setExecutorRole(e.target.value)} />
-        <input className="rounded border px-3 py-2 text-sm" placeholder="Justificativa (obrigatória — PENDING)" value={exceptionReason} onChange={(e) => setExceptionReason(e.target.value)} />
+        <input className="rounded border px-3 py-2 text-sm" placeholder="Justificativa (mín. 3 letras)" value={exceptionReason} onChange={(e) => setExceptionReason(e.target.value)} />
         <input className="rounded border px-3 py-2 text-sm" placeholder="Autorizado por (obrigatório)" value={authorizedBy} onChange={(e) => setAuthorizedBy(e.target.value)} />
         <button type="button" onClick={() => void handleConfirm()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
           Confirmar entrega

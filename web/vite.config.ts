@@ -16,6 +16,7 @@ export default defineConfig({
       "/inventory": "http://localhost:3000",
       "/deliveries": "http://localhost:3000",
       "/reports": "http://localhost:3000",
+      "/activities": "http://localhost:3000",
     },
   },
 });

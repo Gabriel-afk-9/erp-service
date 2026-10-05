@@ -1,31 +1,28 @@
 import { Link } from "react-router-dom";
 
+const CARDS = [
+  { to: "/attendance", label: "ATD — Atendimentos pontuais" },
+  { to: "/families", label: "Famílias" },
+  { to: "/persons", label: "Pessoas" },
+  { to: "/inventory/items", label: "EST — Catálogo" },
+  { to: "/inventory/balance", label: "EST — Saldo" },
+  { to: "/inventory/receipts", label: "EST — Recebimentos" },
+  { to: "/inventory/counts", label: "EST — Contagem" },
+  { to: "/inventory/bazar", label: "BAZ — Transferências do Bazar" },
+  { to: "/deliveries", label: "ENT — Entregas às famílias" },
+  { to: "/reports", label: "REL — Relatórios" },
+];
+
 export function DashboardPage() {
   return (
     <div>
       <h2 className="text-xl font-bold">ERP Social — Luz da Esperança</h2>
       <div className="mt-4 grid gap-4">
-        <Link to="/families" className="rounded bg-white p-4 shadow">
-          CAD — Famílias e vínculos
-        </Link>
-        <Link to="/persons" className="rounded bg-white p-4 shadow">
-          CAD — Pessoas
-        </Link>
-        <Link to="/attendance" className="rounded bg-white p-4 shadow">
-          ATD — Atendimentos pontuais
-        </Link>
-        <Link to="/inventory/items" className="rounded bg-white p-4 shadow">
-          EST — Estoque (catálogo)
-        </Link>
-        <Link to="/deliveries" className="rounded bg-white p-4 shadow">
-          ENT — Entregas às famílias
-        </Link>
-        <Link to="/inventory/bazar" className="rounded bg-white p-4 shadow">
-          BAZ — Transferências do Bazar
-        </Link>
-        <Link to="/reports" className="rounded bg-white p-4 shadow">
-          REL — Relatórios de estoque e entregas
-        </Link>
+        {CARDS.map((card) => (
+          <Link key={card.to} to={card.to} className="rounded bg-white p-4 shadow">
+            {card.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

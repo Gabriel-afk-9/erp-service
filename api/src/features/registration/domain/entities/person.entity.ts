@@ -3,6 +3,7 @@ import { Id } from "../../../../shared/domain/value-objects/id.value-object.js";
 import { InvalidDateRangeError } from "../errors/invalid-date-range.error.js";
 import { PersonNameInvalidError } from "../errors/person-name-invalid.error.js";
 import { Cpf } from "../value-objects/cpf.value-object.js";
+import { TextTooLongError } from "../errors/text-too-long.error.js";
 
 export type PersonSex = "MALE" | "FEMALE" | "OTHER";
 
@@ -41,17 +42,23 @@ const MAX_TEXT_100 = 100;
 const MAX_TEXT_30 = 30;
 const MAX_PHONE = 50;
 
-function normalizeText(value: string | null | undefined, max: number): string | null {
+function normalizeText(value: string | null | undefined, max: number, field: string): string | null {
   if (value === null || value === undefined) return null;
   const trimmed = value.trim();
   if (trimmed === "") return null;
-  return trimmed.slice(0, max);
+  if (trimmed.length > max) {
+    throw new TextTooLongError(field, max);
+  }
+  return trimmed;
 }
 
 function normalizeName(value: string): string {
   const trimmed = value.trim();
   if (trimmed.length < 2) {
     throw new PersonNameInvalidError();
+  }
+  if (trimmed.length > 200) {
+    throw new TextTooLongError("name", 200);
   }
   return trimmed;
 }
@@ -69,10 +76,10 @@ export class Person {
       birthDate: input.birthDate ?? null,
       sex: input.sex ?? null,
       cpf: Cpf.from(input.cpf ?? null),
-      rg: normalizeText(input.rg, MAX_TEXT_30),
-      occupation: normalizeText(input.occupation, MAX_TEXT_100),
-      educationLevel: normalizeText(input.educationLevel, MAX_TEXT_100),
-      contactPhone: normalizeText(input.contactPhone, MAX_PHONE),
+      rg: normalizeText(input.rg, MAX_TEXT_30, "rg"),
+      occupation: normalizeText(input.occupation, MAX_TEXT_100, "occupation"),
+      educationLevel: normalizeText(input.educationLevel, MAX_TEXT_100, "educationLevel"),
+      contactPhone: normalizeText(input.contactPhone, MAX_PHONE, "contactPhone"),
       revision: 1,
     });
   }
@@ -86,13 +93,13 @@ export class Person {
       this.props.name = normalizeName(fields.name);
     }
     if (fields.contactPhone !== undefined) {
-      this.props.contactPhone = normalizeText(fields.contactPhone, MAX_PHONE);
+      this.props.contactPhone = normalizeText(fields.contactPhone, MAX_PHONE, "contactPhone");
     }
     if (fields.occupation !== undefined) {
-      this.props.occupation = normalizeText(fields.occupation, MAX_TEXT_100);
+      this.props.occupation = normalizeText(fields.occupation, MAX_TEXT_100, "occupation");
     }
     if (fields.educationLevel !== undefined) {
-      this.props.educationLevel = normalizeText(fields.educationLevel, MAX_TEXT_100);
+      this.props.educationLevel = normalizeText(fields.educationLevel, MAX_TEXT_100, "educationLevel");
     }
     this.props.revision += 1;
   }

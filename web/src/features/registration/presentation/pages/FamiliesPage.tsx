@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { searchFamilies, type FamilyListItem } from "../api/families.api.js";
+import { translateRegistrationError } from "../api/registration-errors.js";
 
 export function FamiliesPage() {
   const [q, setQ] = useState("");
@@ -12,10 +13,11 @@ export function FamiliesPage() {
     setLoading(true);
     setFeedback(null);
     try {
-      const result = await searchFamilies({ q: query.trim() || undefined });
+      const trimmed = query.trim();
+      const result = await searchFamilies({ q: trimmed === "" ? undefined : trimmed });
       setItems(result.items);
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Erro inesperado");
+      setFeedback(translateRegistrationError(error));
     } finally {
       setLoading(false);
     }

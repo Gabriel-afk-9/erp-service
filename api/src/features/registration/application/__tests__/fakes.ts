@@ -19,11 +19,11 @@ export function stubFamily(overrides: Partial<{
 }> = {}): Family {
   return Family.restore({
     id: overrides.id ?? "11111111-1111-1111-1111-111111111111",
-    code: overrides.code ?? "FAM-001",
+    code: overrides.code ?? "000001",
     referenceName: overrides.referenceName ?? "Maria Silva",
     address: overrides.address ?? "Rua das Flores, 123",
     neighborhood: overrides.neighborhood ?? "Centro",
-    postalCode: overrides.postalCode ?? "12345-678",
+    postalCode: overrides.postalCode ?? "12345678",
     locationType: overrides.locationType ?? "URBAN",
     contactPhone: overrides.contactPhone ?? "(11) 99999-9999",
     revision: 1,

@@ -1,5 +1,6 @@
 import { Id } from "../../../../shared/domain/value-objects/id.value-object.js";
 import { PostalCode } from "../value-objects/postal-code.value-object.js";
+import { TextTooLongError } from "../errors/text-too-long.error.js";
 
 export type LocationType = "URBAN" | "RURAL";
 
@@ -37,11 +38,14 @@ export interface FamilyDetailsCorrection {
 const MAX_SHORT_TEXT = 500;
 const MAX_PHONE = 50;
 
-function normalizeText(value: string | null | undefined, max: number): string | null {
+function normalizeText(value: string | null | undefined, max: number, field: string): string | null {
   if (value === null || value === undefined) return null;
   const trimmed = value.trim();
   if (trimmed === "") return null;
-  return trimmed.slice(0, max);
+  if (trimmed.length > max) {
+    throw new TextTooLongError(field, max);
+  }
+  return trimmed;
 }
 
 export class Family {
@@ -51,12 +55,12 @@ export class Family {
     return new Family({
       id: Id.generate(),
       code: input.code,
-      referenceName: normalizeText(input.referenceName, MAX_SHORT_TEXT),
-      address: normalizeText(input.address, MAX_SHORT_TEXT),
-      neighborhood: normalizeText(input.neighborhood, MAX_SHORT_TEXT),
+      referenceName: normalizeText(input.referenceName, MAX_SHORT_TEXT, "referenceName"),
+      address: normalizeText(input.address, MAX_SHORT_TEXT, "address"),
+      neighborhood: normalizeText(input.neighborhood, MAX_SHORT_TEXT, "neighborhood"),
       postalCode: PostalCode.from(input.postalCode ?? null),
       locationType: input.locationType,
-      contactPhone: normalizeText(input.contactPhone, MAX_PHONE),
+      contactPhone: normalizeText(input.contactPhone, MAX_PHONE, "contactPhone"),
       revision: 1,
     });
   }
@@ -67,13 +71,13 @@ export class Family {
 
   correctDetails(fields: FamilyDetailsCorrection): void {
     if (fields.referenceName !== undefined) {
-      this.props.referenceName = normalizeText(fields.referenceName, MAX_SHORT_TEXT);
+      this.props.referenceName = normalizeText(fields.referenceName, MAX_SHORT_TEXT, "referenceName");
     }
     if (fields.address !== undefined) {
-      this.props.address = normalizeText(fields.address, MAX_SHORT_TEXT);
+      this.props.address = normalizeText(fields.address, MAX_SHORT_TEXT, "address");
     }
     if (fields.neighborhood !== undefined) {
-      this.props.neighborhood = normalizeText(fields.neighborhood, MAX_SHORT_TEXT);
+      this.props.neighborhood = normalizeText(fields.neighborhood, MAX_SHORT_TEXT, "neighborhood");
     }
     if (fields.postalCode !== undefined) {
       this.props.postalCode = PostalCode.from(fields.postalCode);
@@ -82,7 +86,7 @@ export class Family {
       this.props.locationType = fields.locationType;
     }
     if (fields.contactPhone !== undefined) {
-      this.props.contactPhone = normalizeText(fields.contactPhone, MAX_PHONE);
+      this.props.contactPhone = normalizeText(fields.contactPhone, MAX_PHONE, "contactPhone");
     }
     this.props.revision += 1;
   }

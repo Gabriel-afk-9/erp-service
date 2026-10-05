@@ -18,6 +18,8 @@ import { MembershipNotFoundError } from "../../domain/errors/membership-not-foun
 import { PersonAlreadyMemberError } from "../../domain/errors/person-already-member.error.js";
 import { PersonNotFoundError } from "../../domain/errors/person-not-found.error.js";
 import { PostalCodeInvalidError } from "../../domain/errors/postal-code-invalid.error.js";
+import { TextTooLongError } from "../../domain/errors/text-too-long.error.js";
+import { CivilDateFormatError } from "../../../../shared/domain/errors/civil-date-format.error.js";
 
 export interface FamilyRouteDeps {
   create: CreateFamilyUseCase;
@@ -47,7 +49,9 @@ function toStatusCode(error: unknown): number {
   if (
     error instanceof InvalidDateRangeError ||
     error instanceof FamilyCodeInvalidError ||
-    error instanceof PostalCodeInvalidError
+    error instanceof PostalCodeInvalidError ||
+    error instanceof TextTooLongError ||
+    error instanceof CivilDateFormatError
   ) {
     return 422;
   }
@@ -60,58 +64,70 @@ async function sendError(reply: FastifyReply, error: unknown): Promise<void> {
   await reply.status(status).send({ code: (error as DomainError).code, message: (error as Error).message });
 }
 
-const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const CIVIL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function isCalendarDate(raw: string): boolean {
+  if (!CIVIL_DATE_PATTERN.test(raw)) return false;
+  const [yearRaw, monthRaw, dayRaw] = raw.split("-");
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  if (month < 1 || month > 12) return false;
+  const daysInMonth = new Date(Date.UTC(Number(yearRaw), month, 0)).getUTCDate();
+  return day >= 1 && day <= daysInMonth;
+}
+
+const civilDateField = z.string().trim().refine(isCalendarDate, { message: "Expected a valid YYYY-MM-DD calendar date" });
 
 const createFamilyBodySchema = z
   .object({
-    referenceName: z.string().max(500).nullish(),
-    address: z.string().max(500).nullish(),
-    neighborhood: z.string().max(500).nullish(),
-    postalCode: z.string().nullish(),
+    referenceName: z.string().trim().max(500).nullish(),
+    address: z.string().trim().max(500).nullish(),
+    neighborhood: z.string().trim().max(500).nullish(),
+    postalCode: z.string().trim().max(50).nullish(),
     locationType: z.enum(["URBAN", "RURAL"]),
-    contactPhone: z.string().max(50).nullish(),
+    contactPhone: z.string().trim().max(50).nullish(),
   })
   .strict();
 
 const correctFamilyBodySchema = z
   .object({
-    referenceName: z.string().max(500).nullish(),
-    address: z.string().max(500).nullish(),
-    neighborhood: z.string().max(500).nullish(),
-    postalCode: z.string().nullish(),
+    referenceName: z.string().trim().max(500).nullish(),
+    address: z.string().trim().max(500).nullish(),
+    neighborhood: z.string().trim().max(500).nullish(),
+    postalCode: z.string().trim().max(50).nullish(),
     locationType: z.enum(["URBAN", "RURAL"]).optional(),
-    contactPhone: z.string().max(50).nullish(),
-    reason: z.string().min(3),
+    contactPhone: z.string().trim().max(50).nullish(),
+    reason: z.string().trim().min(3).max(1000),
     expectedRevision: z.number().int().positive(),
   })
   .strict();
 
 const addMemberBodySchema = z
   .object({
-    personId: z.string().min(1),
-    validFrom: z.string().regex(CIVIL_DATE),
-    relationshipToReference: z.string().max(100).nullish(),
+    personId: z.string().trim().uuid(),
+    validFrom: civilDateField,
+    relationshipToReference: z.string().trim().max(100).nullish(),
     isReference: z.boolean(),
   })
   .strict();
 
 const closureBodySchema = z
   .object({
-    validUntil: z.string().regex(CIVIL_DATE),
-    reason: z.string().min(3),
+    validUntil: civilDateField,
+    reason: z.string().trim().min(3).max(1000),
     expectedRevision: z.number().int().positive(),
   })
   .strict();
 
-const idParamsSchema = z.object({ id: z.string().min(1) }).strict();
+const idParamsSchema = z.object({ id: z.string().trim().uuid() }).strict();
 
 const listQuerySchema = z
   .object({
-    q: z.string().optional(),
-    code: z.string().optional(),
-    page: z.coerce.number().int().positive().optional(),
-    pageSize: z.coerce.number().int().positive().optional(),
-    asOf: z.string().regex(CIVIL_DATE).optional(),
+    q: z.string().trim().min(2).max(200).optional(),
+    code: z.string().trim().max(50).optional(),
+    page: z.coerce.number().int().min(1).max(100).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    asOf: civilDateField.optional(),
   })
   .strict();
 
@@ -122,7 +138,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
     async (request, reply) => {
       const parsed = createFamilyBodySchema.safeParse(request.body);
       if (!parsed.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family payload", details: parsed.error.flatten().fieldErrors });
         return;
       }
       try {
@@ -140,7 +156,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
     async (request, reply) => {
       const query = listQuerySchema.safeParse(request.query);
       if (!query.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family query" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family query", details: query.error.flatten().fieldErrors });
         return;
       }
       try {
@@ -159,7 +175,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
       const params = idParamsSchema.safeParse(request.params);
       const query = listQuerySchema.safeParse(request.query);
       if (!params.success || !query.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family id" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family id", details: !params.success ? params.error.flatten().fieldErrors : query.success === false ? query.error.flatten().fieldErrors : undefined });
         return;
       }
       try {
@@ -178,7 +194,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
       const params = idParamsSchema.safeParse(request.params);
       const body = correctFamilyBodySchema.safeParse(request.body);
       if (!params.success || !body.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family correction payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family correction payload", details: !body.success ? body.error.flatten().fieldErrors : params.success === false ? params.error.flatten().fieldErrors : undefined });
         return;
       }
       try {
@@ -201,7 +217,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
       const params = idParamsSchema.safeParse(request.params);
       const body = addMemberBodySchema.safeParse(request.body);
       if (!params.success || !body.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family member payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid family member payload", details: !body.success ? body.error.flatten().fieldErrors : params.success === false ? params.error.flatten().fieldErrors : undefined });
         return;
       }
       try {
@@ -224,7 +240,7 @@ export async function registerFamilyRoutes(app: FastifyInstance, deps: FamilyRou
       const params = idParamsSchema.safeParse(request.params);
       const body = closureBodySchema.safeParse(request.body);
       if (!params.success || !body.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid membership closure payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid membership closure payload", details: !body.success ? body.error.flatten().fieldErrors : params.success === false ? params.error.flatten().fieldErrors : undefined });
         return;
       }
       try {

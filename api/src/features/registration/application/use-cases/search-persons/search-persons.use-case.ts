@@ -15,8 +15,17 @@ export class SearchPersonsUseCase {
 
   async execute(input: SearchPersonsInput): Promise<SearchPersonsOutput> {
     const pagination = normalizePagination(input.page, input.pageSize);
-    const query = input.cpf !== undefined && input.cpf !== "" ? input.cpf : (input.q ?? "");
-    const today = new Date().toISOString().slice(0, 10) as CivilDate;
+    const rawQuery = input.cpf !== undefined && input.cpf.trim() !== "" ? input.cpf : (input.q ?? "");
+    const trimmed = rawQuery.trim();
+    // CPF may arrive masked ("123.456.789-09"); the index stores only digits.
+    const query = /^\d[\d.\-/\s]*$/.test(trimmed) && /\d/.test(trimmed) ? trimmed.replace(/\D/g, "") || trimmed : trimmed;
+    const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()) as CivilDate;
     if (input.familyId !== undefined && input.familyId !== "") {
       const activeMemberships = await this.memberships.findActiveByFamily(input.familyId, today);
       const personIdSet = new Set(activeMemberships.map((m) => m.personId));

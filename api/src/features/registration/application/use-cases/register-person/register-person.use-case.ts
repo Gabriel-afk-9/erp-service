@@ -3,13 +3,19 @@ import { FamilyMembership } from "../../../domain/entities/family-membership.ent
 import { Person } from "../../../domain/entities/person.entity.js";
 import { FamilyNotFoundError } from "../../../domain/errors/family-not-found.error.js";
 import { HolderAlreadyExistsError } from "../../../domain/errors/holder-already-exists.error.js";
-import { PersonAlreadyMemberError } from "../../../domain/errors/person-already-member.error.js";
 import type { RegistrationUnitOfWork } from "../../../domain/repositories/registration-unit-of-work.js";
 import type { RegisterPersonInput } from "./register-person.input.js";
 import type { RegisterPersonOutput } from "./register-person.output.js";
 
 function today(): CivilDate {
-  return new Date().toISOString().slice(0, 10) as CivilDate;
+  const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+  const formatted = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  return formatted as CivilDate;
 }
 
 export class RegisterPersonUseCase {
@@ -48,10 +54,9 @@ export class RegisterPersonUseCase {
       if (family === null) {
         throw new FamilyNotFoundError(input.familyId);
       }
-      const overlapping = await stores.memberships.findOverlapping(person.id, validFrom, null);
-      if (overlapping.length > 0) {
-        throw new PersonAlreadyMemberError(person.id);
-      }
+      // Note: the person id was just generated, so there is no prior overlapping
+      // membership to check here. MVP-D04 for new persons is trivially satisfied;
+      // the enforced check lives in add-family-member for existing persons.
       if (input.isReference) {
         const active = await stores.memberships.findActiveByFamily(input.familyId, validFrom);
         if (active.some((m) => m.isReference)) {

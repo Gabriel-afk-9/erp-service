@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { searchPersons, type PersonListItem } from "../api/persons.api.js";
+import { translateRegistrationError } from "../api/registration-errors.js";
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -17,10 +18,11 @@ export function PersonsPage() {
     setLoading(true);
     setFeedback(null);
     try {
-      const result = await searchPersons({ q: query.trim() || undefined });
+      const trimmed = query.trim();
+      const result = await searchPersons({ q: trimmed === "" ? undefined : trimmed });
       setItems(result.items);
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Erro inesperado");
+      setFeedback(translateRegistrationError(error));
     } finally {
       setLoading(false);
     }
@@ -41,7 +43,7 @@ export function PersonsPage() {
       <div className="mt-4 flex gap-2">
         <input
           className="w-full rounded border px-3 py-2"
-          placeholder="Buscar por nome ou CPF"
+          placeholder="Buscar por nome ou CPF (mín. 2 letras)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {

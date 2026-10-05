@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
-  cancelServiceRecord,
-  listServiceRecords,
-  registerServiceRecord,
-  type ServiceRecordItem,
+    cancelServiceRecord,
+    listServiceRecords,
+    registerServiceRecord,
+    type ServiceRecordItem,
 } from "../api/service-records.api";
 
 // TODO: replace with GET /families?query= once the endpoint exists (FASE 2 — CAD).
@@ -96,7 +96,7 @@ export function AttendancePage() {
         <h3 className="mb-2 font-semibold">Registrar atendimento</h3>
         <div className="grid gap-2">
           <label className="block text-sm">
-            Família (familyId)
+            ID da Família
             <input
               className="mt-1 w-full rounded border px-2 py-1"
               value={familyId}

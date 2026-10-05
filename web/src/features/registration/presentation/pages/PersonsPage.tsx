@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { FilterBar } from "../../../../shared/presentation/components/FilterBar.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
 import { searchPersons, type PersonListItem } from "../api/persons.api.js";
 import { translateRegistrationError } from "../api/registration-errors.js";
 
@@ -47,43 +51,50 @@ export function PersonsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Pessoas</h2>
-        <Link to="/persons/new" className="rounded bg-gray-800 px-4 py-2 text-sm text-white">
-          + Cadastrar nova pessoa
-        </Link>
+      <PageHeader
+        title="Pessoas"
+        actions={
+          <Link to="/persons/new">
+            <Button variant="primary">Cadastrar pessoa</Button>
+          </Link>
+        }
+      />
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
+        <FilterBar onSearch={() => void load(q, cpf, 1)} loading={loading}>
+          <label className="flex min-w-0 flex-1 flex-col gap-xs font-sans text-sm font-semibold text-text">
+            Buscar
+            <input
+              className="field-input font-normal"
+              placeholder="Buscar por nome (mín. 2 letras)"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void load(q, cpf, 1);
+              }}
+            />
+          </label>
+          <label className="flex w-48 flex-col gap-xs font-sans text-sm font-semibold text-text">
+            CPF
+            <input
+              className="field-input font-mono font-normal"
+              placeholder="CPF"
+              value={cpf}
+              onChange={(e) => setCpf(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void load(q, cpf, 1);
+              }}
+            />
+          </label>
+        </FilterBar>
       </div>
-      <div className="mt-4 flex gap-2">
-        <input
-          className="w-full rounded border px-3 py-2"
-          placeholder="Buscar por nome ou CPF (mín. 2 letras)"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q, cpf, 1);
-          }}
-        />
-        <input
-          className="w-48 rounded border px-3 py-2"
-          placeholder="CPF"
-          value={cpf}
-          onChange={(e) => setCpf(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q, cpf, 1);
-          }}
-        />
-        <button type="button" onClick={() => void load(q, cpf, 1)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
-          Buscar
-        </button>
-      </div>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
         <DataTable
           columns={[
             { key: "name", label: "Nome" },
-            { key: "birthDate", label: "Nascimento", render: (row) => formatDate((row as PersonListItem).birthDate) },
-            { key: "currentFamilyCode", label: "Família atual", render: (row) => (row as PersonListItem).currentFamilyCode ?? "—" },
-            { key: "actions", label: "Ações", render: (row) => <Link to={`/persons/${(row as PersonListItem).personId}`} className="text-blue-700 underline">Ver</Link> },
+            { key: "birthDate", label: "Nascimento", render: (row) => <span className="font-mono text-xs">{formatDate((row as PersonListItem).birthDate)}</span> },
+            { key: "currentFamilyCode", label: "Família atual", render: (row) => <span className="font-mono text-xs">{(row as PersonListItem).currentFamilyCode ?? "—"}</span> },
+            { key: "actions", label: "Ações", render: (row) => <Link to={`/persons/${(row as PersonListItem).personId}`} className="font-sans text-sm font-semibold text-primary-action underline">Ver</Link> },
           ]}
           rows={items}
           page={page}

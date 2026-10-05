@@ -83,36 +83,36 @@ export function CategoriesPage() {
       <h2 className="text-xl font-bold">Categorias</h2>
       <div className="mt-4 flex gap-2">
         <input className="w-full rounded border px-3 py-2" placeholder="Buscar por nome" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void load(); }} />
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>Buscar</button>
+        <button type="button" onClick={() => void load()} className="rounded bg-background border border-border px-4 py-2" disabled={loading}>Buscar</button>
       </div>
       <label className="mt-2 flex items-center gap-2 text-sm">
         <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> Mostrar inativas
       </label>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <h3 className="font-bold">Nova categoria</h3>
         <div className="mt-2 flex gap-2">
           <input className="w-full rounded border px-3 py-2 text-sm" placeholder="Nome (mín. 2 letras)" value={newName} onChange={(e) => setNewName(e.target.value)} />
           <input className="w-full rounded border px-3 py-2 text-sm" placeholder="Descrição (opcional)" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
-          <button type="button" onClick={() => void handleCreate()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading || newName.trim().length < 2}>Criar</button>
+          <button type="button" onClick={() => void handleCreate()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading || newName.trim().length < 2}>Criar</button>
         </div>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <table className="w-full text-sm">
           <thead><tr className="text-left"><th className="pr-2">Nome</th><th className="pr-2">Descrição</th><th className="pr-2">Status</th><th>Ações</th></tr></thead>
           <tbody>
             {items.map((item) => (
               <tr key={item.categoryId} className="border-t">
-                <td className="pr-2"><Link to={`/inventory/categories/${item.categoryId}`} className="text-blue-700 underline">{item.name}</Link></td>
+                <td className="pr-2"><Link to={`/inventory/categories/${item.categoryId}`} className="text-primary-action underline">{item.name}</Link></td>
                 <td className="pr-2">{item.description ?? "—"}</td>
                 <td className="pr-2">{item.isActive ? "Ativa" : "Inativa"}</td>
                 <td className="flex gap-2">
-                  <button type="button" onClick={() => setEditTarget(item)} className="text-blue-700 underline">Editar</button>
-                  {item.isActive ? <button type="button" onClick={() => setDeactivateTarget(item)} className="text-red-700 underline">Desativar</button> : null}
+                  <button type="button" onClick={() => setEditTarget(item)} className="text-primary-action underline">Editar</button>
+                  {item.isActive ? <button type="button" onClick={() => setDeactivateTarget(item)} className="text-aptIneligibleText underline">Desativar</button> : null}
                 </td>
               </tr>
             ))}
-            {items.length === 0 && !loading ? <tr><td colSpan={4} className="py-4 text-center text-gray-500">Nenhuma categoria encontrada</td></tr> : null}
+            {items.length === 0 && !loading ? <tr><td colSpan={4} className="py-4 text-center text-text-muted">Nenhuma categoria encontrada</td></tr> : null}
           </tbody>
         </table>
       </div>

@@ -75,16 +75,16 @@ export function PersonDetailPage() {
   }
 
   if (!person && loading) return <p className="text-sm">Carregando...</p>;
-  if (!person) return <p className="text-sm text-red-700">{feedback ?? "Pessoa não encontrada"}</p>;
+  if (!person) return <p className="text-sm text-aptIneligibleText">{feedback ?? "Pessoa não encontrada"}</p>;
 
   return (
     <div>
-      <Link to="/persons" className="text-sm text-blue-700 underline">
+      <Link to="/persons" className="text-sm text-primary-action underline">
         ← Voltar para pessoas
       </Link>
       <h2 className="mt-2 text-xl font-bold">{person.name}</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <dl className="grid gap-2 text-sm">
           <div><dt className="font-bold">Nascimento</dt><dd>{show(person.birthDate?.slice(0, 10) ?? null)}</dd></div>
           <div><dt className="font-bold">Sexo</dt><dd>{show(person.sex)}</dd></div>
@@ -95,7 +95,7 @@ export function PersonDetailPage() {
           <div><dt className="font-bold">Telefone</dt><dd>{show(person.contactPhone)}</dd></div>
         </dl>
         {!editing ? (
-          <button type="button" onClick={() => setEditing(true)} className="mt-4 rounded bg-gray-200 px-4 py-2 text-sm">
+          <button type="button" onClick={() => setEditing(true)} className="mt-4 rounded bg-background border border-border px-4 py-2 text-sm">
             Editar
           </button>
         ) : (
@@ -106,27 +106,27 @@ export function PersonDetailPage() {
             <input className="rounded border px-3 py-2 text-sm" placeholder="Escolaridade" value={editFields.educationLevel} onChange={(e) => setEditFields({ ...editFields, educationLevel: e.target.value })} />
             <input className="rounded border px-3 py-2 text-sm" placeholder="Motivo da correção (mín. 3 letras)" value={editReason} onChange={(e) => setEditReason(e.target.value)} />
             <div className="flex gap-2">
-              <button type="button" onClick={() => void handleCorrect()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading || editReason.trim().length < 3}>
+              <button type="button" onClick={() => void handleCorrect()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading || editReason.trim().length < 3}>
                 Salvar
               </button>
-              <button type="button" onClick={() => setEditing(false)} className="rounded bg-gray-200 px-4 py-2 text-sm">
+              <button type="button" onClick={() => setEditing(false)} className="rounded bg-background border border-border px-4 py-2 text-sm">
                 Cancelar
               </button>
             </div>
           </div>
         )}
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <h3 className="font-bold">Vínculo atual</h3>
         {person.currentFamilyId ? (
           <div className="mt-2 text-sm">
             <p>Família: {person.currentFamilyCode ?? "—"} {familyNeighborhood ? `— ${familyNeighborhood}` : ""}</p>
-            <Link to={`/families/${person.currentFamilyId}`} className="text-blue-700 underline">
+            <Link to={`/families/${person.currentFamilyId}`} className="text-primary-action underline">
               Ver família
             </Link>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-gray-500">Sem vínculo vigente. O histórico completo aparece na página da família.</p>
+          <p className="mt-2 text-sm text-text-muted">Sem vínculo vigente. O histórico completo aparece na página da família.</p>
         )}
       </div>
     </div>

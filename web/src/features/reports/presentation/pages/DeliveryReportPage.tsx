@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
+import { StatusTag } from "../../../../shared/presentation/components/StatusTag.js";
 import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
 import { searchFamilies } from "../../../registration/presentation/api/families.api.js";
 import { fetchDeliveryRecords, fetchDeliveryReport, type DeliveryReport, type DeliveryReportRow } from "../api/reports.api.js";
@@ -78,17 +82,29 @@ export function DeliveryReportPage() {
 
   return (
     <div>
-      <Link to="/reports" className="text-sm text-blue-700 underline">← Relatórios</Link>
-      <h2 className="mt-2 text-xl font-bold">Entregas por família</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 flex flex-wrap gap-2 rounded bg-white p-4 shadow">
-        <input type="date" className="rounded border px-3 py-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input type="date" className="rounded border px-3 py-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-        <select className="rounded border px-3 py-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">Todos os status</option>
-          <option value="COMPLETED">Concluídas</option>
-          <option value="REVERSED">Estornadas</option>
-        </select>
+      <Link to="/reports" className="font-sans text-sm font-semibold text-primary-action underline">← Relatórios</Link>
+      <div className="mt-sm">
+        <PageHeader title="Entregas por família" />
+      </div>
+      <p className="mt-xs font-sans text-sm text-text-muted">Uma família atendida várias vezes conta como uma família; entregas aparecem uma única vez.</p>
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md flex flex-wrap items-end gap-sm rounded-lg border border-border bg-surface p-md">
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Início
+          <input type="date" className="field-input w-auto font-normal" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Fim
+          <input type="date" className="field-input w-auto font-normal" value={to} onChange={(e) => setTo(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Status
+          <select className="field-input w-auto font-normal" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">Todos os status</option>
+            <option value="COMPLETED">Concluídas</option>
+            <option value="REVERSED">Estornadas</option>
+          </select>
+        </label>
         <div className="min-w-48">
           <SearchSelect
             label=""
@@ -112,56 +128,56 @@ export function DeliveryReportPage() {
             }}
           />
         </div>
-        {familyId ? <button type="button" onClick={() => { setFamilyId(""); setFamilyLabel(undefined); }} className="rounded bg-gray-200 px-3 py-2 text-sm">Limpar</button> : null}
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>Gerar</button>
-        {report ? <button type="button" onClick={exportCsv} className="rounded bg-gray-200 px-4 py-2 text-sm">Exportar CSV</button> : null}
-        {report ? <button type="button" onClick={() => void loadDetails(1)} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>Ver detalhes</button> : null}
+        {familyId ? <Button type="button" onClick={() => { setFamilyId(""); setFamilyLabel(undefined); }}>Limpar</Button> : null}
+        <Button type="button" variant="primary" onClick={() => void load()} disabled={loading}>Gerar</Button>
+        {report ? <Button type="button" onClick={exportCsv}>Exportar CSV</Button> : null}
+        {report ? <Button type="button" onClick={() => void loadDetails(1)} disabled={loading}>Ver detalhes</Button> : null}
       </div>
       {report ? (
         <>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Entregas</p><p className="text-xl font-bold">{report.deliveryCount}</p></div>
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Famílias</p><p className="text-xl font-bold">{report.familyCount}</p></div>
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Atendimentos</p><p className="text-xl font-bold">{report.serviceRecordCount}</p></div>
+          <div className="mt-md grid gap-md md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Entregas</p><p className="font-mono text-lg text-text-strong">{report.deliveryCount}</p></div>
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Famílias</p><p className="font-mono text-lg text-text-strong">{report.familyCount}</p></div>
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Atendimentos</p><p className="font-mono text-lg text-text-strong">{report.serviceRecordCount}</p></div>
           </div>
-          <div className="mt-4 rounded bg-white p-4 shadow">
-            <h3 className="font-bold">Por item</h3>
-            <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-left"><th className="pr-2">Item</th><th className="pr-2">Quantidade</th><th>Entregas</th></tr></thead>
+          <div className="mt-md rounded-lg border border-border bg-surface p-md">
+            <h3 className="font-display text-lg font-semibold text-text-strong">Por item</h3>
+            <table className="mt-sm w-full font-sans text-sm text-text">
+              <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Item</th><th className="px-md py-sm font-bold text-secondary-dark">Quantidade</th><th className="px-md py-sm font-bold text-secondary-dark">Entregas</th></tr></thead>
               <tbody>
                 {report.totalsByItem.map((total) => (
-                  <tr key={`${total.itemId}-${total.unitSymbol}`} className="border-t"><td className="pr-2">{total.itemName}</td><td className="pr-2">{total.quantity} {total.unitSymbol}</td><td>{total.deliveryCount}</td></tr>
+                  <tr key={`${total.itemId}-${total.unitSymbol}`} className="border-b border-border"><td className="px-md py-sm">{total.itemName}</td><td className="px-md py-sm font-mono">{total.quantity} {total.unitSymbol}</td><td className="px-md py-sm font-mono">{total.deliveryCount}</td></tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="mt-4 rounded bg-white p-4 shadow">
-            <h3 className="font-bold">Entregas</h3>
-            <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-left"><th className="pr-2">Data</th><th className="pr-2">Família</th><th className="pr-2">Status</th><th className="pr-2">Aptidão</th><th>Itens</th></tr></thead>
+          <div className="mt-md rounded-lg border border-border bg-surface p-md">
+            <h3 className="font-display text-lg font-semibold text-text-strong">Entregas</h3>
+            <table className="mt-sm w-full font-sans text-sm text-text">
+              <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Data</th><th className="px-md py-sm font-bold text-secondary-dark">Família</th><th className="px-md py-sm font-bold text-secondary-dark">Status</th><th className="px-md py-sm font-bold text-secondary-dark">Aptidão</th><th className="px-md py-sm font-bold text-secondary-dark">Itens</th></tr></thead>
               <tbody>
                 {report.deliveries.map((delivery) => (
-                  <tr key={delivery.deliveryId} className="border-t">
-                    <td className="pr-2">{delivery.occurredAt}</td>
-                    <td className="pr-2">{delivery.familyCode ?? "—"}</td>
-                    <td className="pr-2">{delivery.status === "COMPLETED" ? "Concluída" : "Estornada"}</td>
-                    <td className="pr-2">{delivery.eligibilityStatus}</td>
-                    <td>{delivery.lines.map((line) => `${line.itemName} (${line.quantity} ${line.unitSymbol})`).join(", ")}</td>
+                  <tr key={delivery.deliveryId} className="border-b border-border">
+                    <td className="px-md py-sm font-mono text-xs">{delivery.occurredAt}</td>
+                    <td className="px-md py-sm font-mono text-xs">{delivery.familyCode ?? "—"}</td>
+                    <td className="px-md py-sm">{delivery.status === "COMPLETED" ? <StatusTag tone="neutral" icon="check_circle" label="Concluída" /> : <StatusTag tone="pending" icon="history" label="Estornada" />}</td>
+                    <td className="px-md py-sm font-mono text-xs">{delivery.eligibilityStatus}</td>
+                    <td className="px-md py-sm">{delivery.lines.map((line) => `${line.itemName} (${line.quantity} ${line.unitSymbol})`).join(", ")}</td>
                   </tr>
                 ))}
-                {report.deliveries.length === 0 ? <tr><td colSpan={5} className="py-4 text-center text-gray-500">Sem entregas no período</td></tr> : null}
+                {report.deliveries.length === 0 ? <tr><td colSpan={5} className="py-md text-center font-sans text-sm text-text-muted">Sem entregas no período</td></tr> : null}
               </tbody>
             </table>
           </div>
           {stale ? (
-            <div className="mt-4 rounded bg-yellow-50 p-4 text-sm shadow">
+            <div className="mt-md rounded-md border border-accentOrange bg-aptPendingBg p-md font-sans text-sm text-aptPendingText">
               Os dados foram atualizados. Recarregue o relatório para ver os dados atuais.
-              <button type="button" onClick={() => void load()} className="ml-2 rounded bg-gray-800 px-3 py-1 text-white">Recarregar</button>
+              <Button type="button" variant="primary" className="ml-sm" onClick={() => void load()}>Recarregar</Button>
             </div>
           ) : null}
           {showDetails ? (
-            <div className="mt-4 rounded bg-white p-4 shadow">
-              <h3 className="font-bold">Detalhe de entregas</h3>
+            <div className="mt-md rounded-lg border border-border bg-surface p-md">
+              <h3 className="font-display text-lg font-semibold text-text-strong">Detalhe de entregas</h3>
               <DataTable
                 columns={[
                   { key: "occurredAt", label: "Data" },

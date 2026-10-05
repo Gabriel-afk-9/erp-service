@@ -47,19 +47,19 @@ export function UnitsPage() {
       <label className="mt-2 flex items-center gap-2 text-sm">
         <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> Mostrar inativas
       </label>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <h3 className="font-bold">Nova unidade</h3>
         <div className="mt-2 grid gap-2">
           <input className="rounded border px-3 py-2 text-sm" placeholder="Símbolo (ex: UN, KG)" value={symbol} onChange={(e) => setSymbol(e.target.value)} />
           <input className="rounded border px-3 py-2 text-sm" placeholder="Nome (ex: Unidade)" value={name} onChange={(e) => setName(e.target.value)} />
           <input className="rounded border px-3 py-2 text-sm" placeholder="Casas decimais (0–4)" value={decimalPlaces} onChange={(e) => setDecimalPlaces(e.target.value)} />
           <input className="rounded border px-3 py-2 text-sm" placeholder="Incremento (ex: 1, 0.1)" value={quantityIncrement} onChange={(e) => setQuantityIncrement(e.target.value)} />
-          {decimalPlaces === "0" ? <p className="text-sm text-gray-500">Quantidade somente inteira.</p> : null}
-          <button type="button" onClick={() => void handleCreate()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>Criar</button>
+          {decimalPlaces === "0" ? <p className="text-sm text-text-muted">Quantidade somente inteira.</p> : null}
+          <button type="button" onClick={() => void handleCreate()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading}>Criar</button>
         </div>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <table className="w-full text-sm">
           <thead><tr className="text-left"><th className="pr-2">Símbolo</th><th className="pr-2">Nome</th><th className="pr-2">Decimais</th><th className="pr-2">Incremento</th></tr></thead>
           <tbody>
@@ -71,7 +71,7 @@ export function UnitsPage() {
                 <td className="pr-2">{unit.quantityIncrement}</td>
               </tr>
             ))}
-            {units.length === 0 && !loading ? <tr><td colSpan={4} className="py-4 text-center text-gray-500">Nenhuma unidade encontrada</td></tr> : null}
+            {units.length === 0 && !loading ? <tr><td colSpan={4} className="py-4 text-center text-text-muted">Nenhuma unidade encontrada</td></tr> : null}
           </tbody>
         </table>
       </div>

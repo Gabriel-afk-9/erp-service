@@ -24,7 +24,7 @@ export function PrivateRoute() {
   }, []);
 
   if (state === "checking") {
-    return <p className="p-4 text-sm text-gray-600">Verificando sessão...</p>;
+    return <p className="bg-background p-md font-sans text-sm text-text-muted">Verificando sessão...</p>;
   }
   if (state === "invalid") {
     return <Navigate to="/" replace />;

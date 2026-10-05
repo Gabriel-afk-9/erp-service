@@ -41,12 +41,12 @@ export function ReceiptsPage() {
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Recebimentos</h2>
-        <Link to="/inventory/receipts/new" className="rounded bg-gray-800 px-4 py-2 text-sm text-white">
+        <Link to="/inventory/receipts/new" className="rounded bg-primary-action px-4 py-2 text-sm text-white">
           + Registrar recebimento
         </Link>
       </div>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 flex flex-wrap gap-2 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 flex flex-wrap gap-2 rounded-lg border border-border bg-surface p-md">
         <input type="date" className="rounded border px-3 py-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
         <input type="date" className="rounded border px-3 py-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
         <select className="rounded border px-3 py-2 text-sm" value={originType} onChange={(e) => setOriginType(e.target.value)}>
@@ -54,15 +54,15 @@ export function ReceiptsPage() {
             <option key={type} value={type}>{type === "" ? "Todas as origens" : ORIGIN_LABELS[type]}</option>
           ))}
         </select>
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>Buscar</button>
+        <button type="button" onClick={() => void load()} className="rounded bg-background border border-border px-4 py-2 text-sm" disabled={loading}>Buscar</button>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <DataTable
           columns={[
             { key: "receivedAt", label: "Data" },
             { key: "originType", label: "Origem", render: (row) => ORIGIN_LABELS[(row as ReceiptListItem).originType] ?? (row as ReceiptListItem).originType },
             { key: "donorName", label: "Doador", render: (row) => (row as ReceiptListItem).donorName ?? "—" },
-            { key: "receiptId", label: "Detalhe", render: (row) => <Link to={`/inventory/receipts/${(row as ReceiptListItem).receiptId}`} className="text-blue-700 underline">Ver</Link> },
+            { key: "receiptId", label: "Detalhe", render: (row) => <Link to={`/inventory/receipts/${(row as ReceiptListItem).receiptId}`} className="text-primary-action underline">Ver</Link> },
           ]}
           rows={receipts}
           page={1}

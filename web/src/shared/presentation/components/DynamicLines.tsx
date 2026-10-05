@@ -25,13 +25,13 @@ export function DynamicLines<T extends LineItem>({ lines, onChange, renderLine, 
   return (
     <div>
       {lines.map((line, index) => (
-        <div key={line.key} className="mb-2 rounded border p-2">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-sm font-medium">Linha {index + 1}</span>
+        <div key={line.key} className="mb-sm rounded-md border border-border bg-surface p-md">
+          <div className="mb-sm flex items-center justify-between">
+            <span className="font-sans text-sm font-semibold text-text-strong">Linha {index + 1}</span>
             <button
               type="button"
               onClick={() => onChange(lines.filter((_, i) => i !== index))}
-              className="text-sm text-red-700 underline"
+              className="font-sans text-sm text-aptIneligibleText underline"
             >
               Remover
             </button>
@@ -42,7 +42,7 @@ export function DynamicLines<T extends LineItem>({ lines, onChange, renderLine, 
       <button
         type="button"
         onClick={() => onChange([...lines, createLine()])}
-        className="rounded bg-gray-200 px-4 py-2 text-sm"
+        className="inline-flex h-[40px] items-center rounded-md border border-border bg-surface px-md font-sans text-sm font-semibold text-text-strong hover:bg-background"
       >
         {addLabel}
       </button>

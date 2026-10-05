@@ -76,7 +76,7 @@ export function NewPersonPage() {
   return (
     <div>
       <h2 className="text-xl font-bold">Nova pessoa</h2>
-      <form onSubmit={handleSubmit} className="mt-4 rounded bg-white p-4 shadow">
+      <form onSubmit={handleSubmit} className="mt-4 rounded-lg border border-border bg-surface p-md">
         <div className="grid gap-3">
           <label className="block text-sm">Nome *<input className="mt-1 w-full rounded border px-2 py-1" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={200} /></label>
           <label className="block text-sm">Data de nascimento<input type="date" className="mt-1 w-full rounded border px-2 py-1" value={birthDate} max={today()} onChange={(e) => setBirthDate(e.target.value)} /></label>
@@ -92,11 +92,11 @@ export function NewPersonPage() {
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isReference} onChange={(e) => setIsReference(e.target.checked)} /> Titular da família</label>
         </div>
         <div className="mt-3 flex flex-col gap-2">
-          <button type="button" onClick={() => void handleDuplicateCheck()} className="w-fit rounded bg-gray-200 px-3 py-1 text-sm">Verificar duplicados antes de cadastrar</button>
-          {duplicateHint ? <p className="text-sm text-gray-700">{duplicateHint}</p> : null}
+          <button type="button" onClick={() => void handleDuplicateCheck()} className="w-fit rounded bg-background border border-border px-3 py-1 text-sm">Verificar duplicados antes de cadastrar</button>
+          {duplicateHint ? <p className="text-sm text-text">{duplicateHint}</p> : null}
         </div>
-        {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-        <button type="submit" disabled={loading} className="mt-4 rounded bg-gray-800 px-4 py-2 text-white">{loading ? "Cadastrando..." : "Cadastrar pessoa"}</button>
+        {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+        <button type="submit" disabled={loading} className="mt-4 rounded bg-primary-action px-4 py-2 text-white">{loading ? "Cadastrando..." : "Cadastrar pessoa"}</button>
       </form>
     </div>
   );

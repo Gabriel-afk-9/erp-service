@@ -76,7 +76,7 @@ export function ItemsPage() {
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Itens</h2>
-        <Link to="/inventory/items/new" className="rounded bg-gray-800 px-4 py-2 text-sm text-white">+ Novo item</Link>
+        <Link to="/inventory/items/new" className="rounded bg-primary-action px-4 py-2 text-sm text-white">+ Novo item</Link>
       </div>
       <div className="mt-4 flex gap-2">
         <input className="w-full rounded border px-3 py-2" placeholder="Buscar por nome" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void load(); }} />
@@ -84,13 +84,13 @@ export function ItemsPage() {
           <option value="">Todas as categorias</option>
           {categories.map((cat) => <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>)}
         </select>
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>Buscar</button>
+        <button type="button" onClick={() => void load()} className="rounded bg-background border border-border px-4 py-2" disabled={loading}>Buscar</button>
       </div>
       <label className="mt-2 flex items-center gap-2 text-sm">
         <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} /> Mostrar inativas
       </label>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <table className="w-full text-sm">
           <thead><tr className="text-left"><th className="pr-2">Nome</th><th className="pr-2">Categoria</th><th className="pr-2">Unidade</th><th className="pr-2">Validade</th><th className="pr-2">Status</th><th>Ações</th></tr></thead>
           <tbody>
@@ -102,13 +102,13 @@ export function ItemsPage() {
                 <td className="pr-2">{item.requiresExpiration ? "✓" : "✗"}</td>
                 <td className="pr-2">{item.isActive ? "Ativo" : "Inativo"}</td>
                 <td className="flex gap-2">
-                  <Link to={`/inventory/items/${item.itemId}/movements`} className="text-blue-700 underline">Movimentos</Link>
-                  <button type="button" onClick={() => setEditTarget(item)} className="text-blue-700 underline">Editar</button>
-                  {item.isActive ? <button type="button" onClick={() => setDeactivateTarget(item)} className="text-red-700 underline">Desativar</button> : null}
+                  <Link to={`/inventory/items/${item.itemId}/movements`} className="text-primary-action underline">Movimentos</Link>
+                  <button type="button" onClick={() => setEditTarget(item)} className="text-primary-action underline">Editar</button>
+                  {item.isActive ? <button type="button" onClick={() => setDeactivateTarget(item)} className="text-aptIneligibleText underline">Desativar</button> : null}
                 </td>
               </tr>
             ))}
-            {items.length === 0 && !loading ? <tr><td colSpan={6} className="py-4 text-center text-gray-500">Nenhum item encontrado</td></tr> : null}
+            {items.length === 0 && !loading ? <tr><td colSpan={6} className="py-4 text-center text-text-muted">Nenhum item encontrado</td></tr> : null}
           </tbody>
         </table>
       </div>

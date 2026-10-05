@@ -42,14 +42,14 @@ export function ItemMovementsPage() {
 
   return (
     <div>
-      <Link to="/inventory/balance" className="text-sm text-blue-700 underline">← Voltar ao saldo</Link>
+      <Link to="/inventory/balance" className="text-sm text-primary-action underline">← Voltar ao saldo</Link>
       <h2 className="mt-2 text-xl font-bold">Movimentos — {itemName || "..."}</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 flex gap-2 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 flex gap-2 rounded-lg border border-border bg-surface p-md">
         <input type="date" className="rounded border px-3 py-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-        <button type="button" onClick={() => void load(to || undefined)} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>Filtrar até</button>
+        <button type="button" onClick={() => void load(to || undefined)} className="rounded bg-background border border-border px-4 py-2 text-sm" disabled={loading}>Filtrar até</button>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <table className="w-full text-sm">
           <thead><tr className="text-left"><th className="pr-2">Data</th><th className="pr-2">Tipo</th><th className="pr-2">Qtd.</th><th className="pr-2">Delta</th><th>Saldo</th></tr></thead>
           <tbody>
@@ -62,7 +62,7 @@ export function ItemMovementsPage() {
                 <td>{movement.balanceAfter}</td>
               </tr>
             ))}
-            {movements.length === 0 && !loading ? <tr><td colSpan={5} className="py-4 text-center text-gray-500">Sem movimentos</td></tr> : null}
+            {movements.length === 0 && !loading ? <tr><td colSpan={5} className="py-4 text-center text-text-muted">Sem movimentos</td></tr> : null}
           </tbody>
         </table>
       </div>

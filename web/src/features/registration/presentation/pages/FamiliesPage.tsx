@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { FilterBar } from "../../../../shared/presentation/components/FilterBar.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
 import { searchFamilies, type FamilyListItem } from "../api/families.api.js";
 import { translateRegistrationError } from "../api/registration-errors.js";
 
@@ -42,43 +46,50 @@ export function FamiliesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Famílias</h2>
-        <Link to="/families/new" className="rounded bg-gray-800 px-4 py-2 text-sm text-white">
-          + Nova família
-        </Link>
+      <PageHeader
+        title="Pessoas e famílias"
+        actions={
+          <Link to="/families/new">
+            <Button variant="primary">Cadastrar família</Button>
+          </Link>
+        }
+      />
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
+        <FilterBar onSearch={() => void load(q, code, 1)} loading={loading}>
+          <label className="flex min-w-0 flex-1 flex-col gap-xs font-sans text-sm font-semibold text-text">
+            Buscar
+            <input
+              className="field-input font-normal"
+              placeholder="Buscar por código, nome ou bairro"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void load(q, code, 1);
+              }}
+            />
+          </label>
+          <label className="flex w-48 flex-col gap-xs font-sans text-sm font-semibold text-text">
+            Código
+            <input
+              className="field-input font-mono font-normal"
+              placeholder="Código exato"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void load(q, code, 1);
+              }}
+            />
+          </label>
+        </FilterBar>
       </div>
-      <div className="mt-4 flex gap-2">
-        <input
-          className="w-full rounded border px-3 py-2"
-          placeholder="Buscar por código, nome ou bairro"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q, code, 1);
-          }}
-        />
-        <input
-          className="w-48 rounded border px-3 py-2"
-          placeholder="Código exato"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") void load(q, code, 1);
-          }}
-        />
-        <button type="button" onClick={() => void load(q, code, 1)} className="rounded bg-gray-200 px-4 py-2" disabled={loading}>
-          Buscar
-        </button>
-      </div>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
         <DataTable
           columns={[
-            { key: "code", label: "Código", render: (row) => <Link to={`/families/${(row as FamilyListItem).familyId}`} className="text-blue-700 underline">{(row as FamilyListItem).code}</Link> },
+            { key: "code", label: "Código", render: (row) => <Link to={`/families/${(row as FamilyListItem).familyId}`} className="font-mono text-xs text-primary-action underline">{(row as FamilyListItem).code}</Link> },
             { key: "referenceName", label: "Referência", render: (row) => (row as FamilyListItem).referenceName ?? "—" },
             { key: "neighborhood", label: "Bairro", render: (row) => (row as FamilyListItem).neighborhood ?? "—" },
-            { key: "memberCount", label: "Membros", render: (row) => String((row as FamilyListItem).memberCount) },
+            { key: "memberCount", label: "Membros", render: (row) => <span className="font-mono">{String((row as FamilyListItem).memberCount)}</span> },
           ]}
           rows={items}
           page={page}

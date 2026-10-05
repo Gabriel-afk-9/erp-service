@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
 import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
 import { listCategories, listItems } from "../../../inventory/presentation/api/inventory.api.js";
 import { fetchStockRecords, fetchStockReport, type StockMovementRow, type StockReport } from "../api/reports.api.js";
@@ -96,21 +99,36 @@ export function StockReportPage() {
 
   return (
     <div>
-      <Link to="/reports" className="text-sm text-blue-700 underline">← Relatórios</Link>
-      <h2 className="mt-2 text-xl font-bold">Movimentação de estoque</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 flex flex-wrap gap-2 rounded bg-white p-4 shadow">
-        <input type="date" className="rounded border px-3 py-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input type="date" className="rounded border px-3 py-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-        <select className="rounded border px-3 py-2 text-sm" value={movementType} onChange={(e) => setMovementType(e.target.value)}>
-          {MOVEMENT_TYPES.map((type) => (
-            <option key={type} value={type}>{type === "" ? "Todos os tipos" : type}</option>
-          ))}
-        </select>
-        <select className="rounded border px-3 py-2 text-sm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          <option value="">Todas as categorias</option>
-          {categories.map((category) => <option key={category.categoryId} value={category.categoryId}>{category.name}</option>)}
-        </select>
+      <Link to="/reports" className="font-sans text-sm font-semibold text-primary-action underline">← Relatórios</Link>
+      <div className="mt-sm">
+        <PageHeader title="Movimentação de estoque" />
+      </div>
+      <p className="mt-xs font-sans text-sm text-text-muted">Período, unidade e situação dos registros acompanham cada total.</p>
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md flex flex-wrap items-end gap-sm rounded-lg border border-border bg-surface p-md">
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Início
+          <input type="date" className="field-input w-auto font-normal" value={from} onChange={(e) => setFrom(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Fim
+          <input type="date" className="field-input w-auto font-normal" value={to} onChange={(e) => setTo(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Tipo
+          <select className="field-input w-auto font-normal" value={movementType} onChange={(e) => setMovementType(e.target.value)}>
+            {MOVEMENT_TYPES.map((type) => (
+              <option key={type} value={type}>{type === "" ? "Todos os tipos" : type}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Categoria
+          <select className="field-input w-auto font-normal" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <option value="">Todas as categorias</option>
+            {categories.map((category) => <option key={category.categoryId} value={category.categoryId}>{category.name}</option>)}
+          </select>
+        </label>
         <div className="min-w-48">
           <SearchSelect
             label=""
@@ -133,50 +151,50 @@ export function StockReportPage() {
             }}
           />
         </div>
-        {itemId ? <button type="button" onClick={() => { setItemId(""); setItemLabel(undefined); }} className="rounded bg-gray-200 px-3 py-2 text-sm">Limpar item</button> : null}
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>Gerar</button>
-        {report ? <button type="button" onClick={exportCsv} className="rounded bg-gray-200 px-4 py-2 text-sm">Exportar CSV</button> : null}
-        {report ? <button type="button" onClick={() => void loadDetails(1)} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>Ver detalhes</button> : null}
+        {itemId ? <Button type="button" onClick={() => { setItemId(""); setItemLabel(undefined); }}>Limpar item</Button> : null}
+        <Button type="button" variant="primary" onClick={() => void load()} disabled={loading}>Gerar</Button>
+        {report ? <Button type="button" onClick={exportCsv}>Exportar CSV</Button> : null}
+        {report ? <Button type="button" onClick={() => void loadDetails(1)} disabled={loading}>Ver detalhes</Button> : null}
       </div>
       {report ? (
         <>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Saldo inicial</p><p className="text-xl font-bold">{report.openingBalance}</p></div>
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Saldo final</p><p className="text-xl font-bold">{report.closingBalance}</p></div>
-            <div className="rounded bg-white p-4 shadow"><p className="text-sm text-gray-600">Movimentos</p><p className="text-xl font-bold">{report.movements.length}</p></div>
+          <div className="mt-md grid gap-md md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Saldo inicial</p><p className="font-mono text-lg text-text-strong">{report.openingBalance}</p></div>
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Saldo final</p><p className="font-mono text-lg text-text-strong">{report.closingBalance}</p></div>
+            <div className="rounded-lg border border-border bg-surface p-md"><p className="font-sans text-sm text-text-muted">Movimentos</p><p className="font-mono text-lg text-text-strong">{report.movements.length}</p></div>
           </div>
-          <div className="mt-4 rounded bg-white p-4 shadow">
-            <h3 className="font-bold">Por tipo</h3>
-            <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-left"><th className="pr-2">Tipo</th><th className="pr-2">Entradas</th><th className="pr-2">Saídas</th><th className="pr-2">Saldo</th><th>Qtd.</th></tr></thead>
+          <div className="mt-md rounded-lg border border-border bg-surface p-md">
+            <h3 className="font-display text-lg font-semibold text-text-strong">Por tipo</h3>
+            <table className="mt-sm w-full font-sans text-sm text-text">
+              <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Tipo</th><th className="px-md py-sm font-bold text-secondary-dark">Entradas</th><th className="px-md py-sm font-bold text-secondary-dark">Saídas</th><th className="px-md py-sm font-bold text-secondary-dark">Saldo</th><th className="px-md py-sm font-bold text-secondary-dark">Qtd.</th></tr></thead>
               <tbody>
                 {report.totalsByType.map((total) => (
-                  <tr key={total.type} className="border-t"><td className="pr-2">{total.type}</td><td className="pr-2">{total.inbound}</td><td className="pr-2">{total.outbound}</td><td className="pr-2">{total.net}</td><td>{total.count}</td></tr>
+                  <tr key={total.type} className="border-b border-border"><td className="px-md py-sm font-mono text-xs">{total.type}</td><td className="px-md py-sm font-mono">{total.inbound}</td><td className="px-md py-sm font-mono">{total.outbound}</td><td className="px-md py-sm font-mono">{total.net}</td><td className="px-md py-sm font-mono">{total.count}</td></tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="mt-4 rounded bg-white p-4 shadow">
-            <h3 className="font-bold">Por item</h3>
-            <table className="mt-2 w-full text-sm">
-              <thead><tr className="text-left"><th className="pr-2">Item</th><th className="pr-2">Entradas</th><th className="pr-2">Saídas</th><th>Saldo</th></tr></thead>
+          <div className="mt-md rounded-lg border border-border bg-surface p-md">
+            <h3 className="font-display text-lg font-semibold text-text-strong">Por item</h3>
+            <table className="mt-sm w-full font-sans text-sm text-text">
+              <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Item</th><th className="px-md py-sm font-bold text-secondary-dark">Entradas</th><th className="px-md py-sm font-bold text-secondary-dark">Saídas</th><th className="px-md py-sm font-bold text-secondary-dark">Saldo</th></tr></thead>
               <tbody>
                 {report.totalsByItem.map((total) => (
-                  <tr key={total.itemId} className="border-t"><td className="pr-2">{total.itemName} ({total.unitSymbol})</td><td className="pr-2">{total.inbound}</td><td className="pr-2">{total.outbound}</td><td>{total.net}</td></tr>
+                  <tr key={total.itemId} className="border-b border-border"><td className="px-md py-sm">{total.itemName} <span className="font-mono text-xs text-text-muted">({total.unitSymbol})</span></td><td className="px-md py-sm font-mono">{total.inbound}</td><td className="px-md py-sm font-mono">{total.outbound}</td><td className="px-md py-sm font-mono">{total.net}</td></tr>
                 ))}
-                {report.totalsByItem.length === 0 ? <tr><td colSpan={4} className="py-4 text-center text-gray-500">Sem movimentos no período</td></tr> : null}
+                {report.totalsByItem.length === 0 ? <tr><td colSpan={4} className="py-md text-center font-sans text-sm text-text-muted">Sem movimentos no período</td></tr> : null}
               </tbody>
             </table>
           </div>
           {stale ? (
-            <div className="mt-4 rounded bg-yellow-50 p-4 text-sm shadow">
+            <div className="mt-md rounded-md border border-accentOrange bg-aptPendingBg p-md font-sans text-sm text-aptPendingText">
               Os dados foram atualizados. Recarregue o relatório para ver os dados atuais.
-              <button type="button" onClick={() => void load()} className="ml-2 rounded bg-gray-800 px-3 py-1 text-white">Recarregar</button>
+              <Button type="button" variant="primary" className="ml-sm" onClick={() => void load()}>Recarregar</Button>
             </div>
           ) : null}
           {showDetails ? (
-            <div className="mt-4 rounded bg-white p-4 shadow">
-              <h3 className="font-bold">Detalhe de movimentos</h3>
+            <div className="mt-md rounded-lg border border-border bg-surface p-md">
+              <h3 className="font-display text-lg font-semibold text-text-strong">Detalhe de movimentos</h3>
               <DataTable
                 columns={[
                   { key: "occurredAt", label: "Data" },

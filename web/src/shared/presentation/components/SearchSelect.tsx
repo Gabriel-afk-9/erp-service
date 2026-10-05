@@ -70,10 +70,10 @@ export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedL
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm">
+      <label className="block font-sans text-sm font-semibold text-text">
         {label}
         <input
-          className="mt-1 w-full rounded border px-2 py-1"
+          className="field-input mt-xs font-normal"
           placeholder={placeholder}
           value={selectedLabel ?? query}
           disabled={disabled}
@@ -84,23 +84,23 @@ export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedL
         />
       </label>
       {open ? (
-        <ul className="absolute z-10 max-h-48 w-full overflow-auto rounded border bg-white shadow">
+        <ul className="absolute z-10 max-h-48 w-full overflow-auto rounded-md border border-border bg-surface shadow-[0_4px_16px_-2px_rgba(92,75,50,0.08)]">
           {loading ? (
-            <li className="px-2 py-1 text-sm text-gray-500">Buscando...</li>
+            <li className="px-md py-sm font-sans text-sm text-text-muted">Buscando...</li>
           ) : error ? (
-            <li className="px-2 py-1 text-sm text-red-700">{error}</li>
+            <li className="px-md py-sm font-sans text-sm text-aptIneligibleText">{error}</li>
           ) : options.length === 0 ? (
-            <li className="px-2 py-1 text-sm text-gray-500">Nenhum resultado</li>
+            <li className="px-md py-sm font-sans text-sm text-text-muted">Nenhum resultado</li>
           ) : (
             options.map((option) => (
               <li key={option.id}>
                 <button
                   type="button"
-                  className="block w-full px-2 py-1 text-left text-sm hover:bg-gray-100"
+                  className="block w-full px-md py-sm text-left font-sans text-sm hover:bg-background"
                   onClick={() => handleSelect(option)}
                 >
-                  <span className="font-medium">{option.label}</span>
-                  {option.sublabel ? <span className="ml-2 text-gray-500">{option.sublabel}</span> : null}
+                  <span className="font-semibold text-text-strong">{option.label}</span>
+                  {option.sublabel ? <span className="ml-sm font-mono text-xs text-text-muted">{option.sublabel}</span> : null}
                 </button>
               </li>
             ))

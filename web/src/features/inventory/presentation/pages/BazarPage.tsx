@@ -4,6 +4,9 @@ import { DynamicLines, createLineKey, type LineItem } from "../../../../shared/p
 import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
 import { getItem, listItems } from "../api/inventory.api.js";
 import { listBazarTransfers, registerBazarTransfer, type BazarTransferItem } from "../api/bazar.api.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
 
 interface BazarLine extends LineItem {
   itemId: string;
@@ -106,22 +109,23 @@ export function BazarPage() {
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold">Recebimento do Bazar</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
-        <h3 className="font-semibold">Nova transferência</h3>
-        <label className="block text-sm">Referência do Bazar *
-          <input className="mt-1 w-full rounded border px-2 py-1" value={externalReference} onChange={(e) => setExternalReference(e.target.value)} />
+    <div className="mx-auto max-w-[960px]">
+      <PageHeader title="Recebimento do Bazar" />
+      <p className="mt-xs font-sans text-sm text-text-muted">Referência única por transferência; reapresentação não cria segunda entrada.</p>
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md grid gap-md rounded-lg border border-border bg-surface p-lg">
+        <h3 className="font-display text-lg font-semibold text-text-strong">Nova transferência</h3>
+        <label className="block font-sans text-sm font-semibold text-text">Referência do Bazar *
+          <input className="field-input mt-xs font-mono font-normal" value={externalReference} onChange={(e) => setExternalReference(e.target.value)} />
         </label>
-        <label className="block text-sm">Doador (opcional)
-          <input className="mt-1 w-full rounded border px-2 py-1" value={donorName} onChange={(e) => setDonorName(e.target.value)} />
+        <label className="block font-sans text-sm font-semibold text-text">Doador (opcional)
+          <input className="field-input mt-xs font-normal" value={donorName} onChange={(e) => setDonorName(e.target.value)} />
         </label>
-        <label className="block text-sm">Data do recebimento
-          <input type="date" className="mt-1 w-full rounded border px-2 py-1" value={receivedAt} max={today()} onChange={(e) => setReceivedAt(e.target.value)} />
+        <label className="block font-sans text-sm font-semibold text-text">Data do recebimento
+          <input type="date" className="field-input mt-xs font-normal" value={receivedAt} max={today()} onChange={(e) => setReceivedAt(e.target.value)} />
         </label>
-        <label className="block text-sm">Nota (opcional)
-          <textarea className="mt-1 w-full rounded border px-2 py-1" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
+        <label className="block font-sans text-sm font-semibold text-text">Nota (opcional)
+          <textarea className="field-input mt-xs h-auto min-h-[88px] py-sm font-normal" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
         </label>
         <DynamicLines
           lines={lines}
@@ -145,53 +149,53 @@ export function BazarPage() {
                   })();
                 }}
               />
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block text-sm">Informada *
-                  <input className="mt-1 w-full rounded border px-2 py-1" inputMode="decimal" value={line.informedQuantity} onChange={(e) => onChange({ ...line, informedQuantity: e.target.value })} />
+              <div className="grid grid-cols-2 gap-sm">
+                <label className="block font-sans text-sm font-semibold text-text">Informada *
+                  <input className="field-input mt-xs font-mono font-normal" inputMode="decimal" value={line.informedQuantity} onChange={(e) => onChange({ ...line, informedQuantity: e.target.value })} />
                 </label>
-                <label className="block text-sm">Recebida *
-                  <input className="mt-1 w-full rounded border px-2 py-1" inputMode="decimal" value={line.receivedQuantity} onChange={(e) => onChange({ ...line, receivedQuantity: e.target.value })} />
+                <label className="block font-sans text-sm font-semibold text-text">Recebida *
+                  <input className="field-input mt-xs font-mono font-normal" inputMode="decimal" value={line.receivedQuantity} onChange={(e) => onChange({ ...line, receivedQuantity: e.target.value })} />
                 </label>
-                <label className="block text-sm">Aceita *
-                  <input className="mt-1 w-full rounded border px-2 py-1" inputMode="decimal" value={line.acceptedQuantity} onChange={(e) => onChange({ ...line, acceptedQuantity: e.target.value })} />
+                <label className="block font-sans text-sm font-semibold text-text">Aceita *
+                  <input className="field-input mt-xs font-mono font-normal" inputMode="decimal" value={line.acceptedQuantity} onChange={(e) => onChange({ ...line, acceptedQuantity: e.target.value })} />
                 </label>
-                <label className="block text-sm">Descartada *
-                  <input className="mt-1 w-full rounded border px-2 py-1" inputMode="decimal" value={line.rejectedQuantity} onChange={(e) => onChange({ ...line, rejectedQuantity: e.target.value })} />
+                <label className="block font-sans text-sm font-semibold text-text">Descartada *
+                  <input className="field-input mt-xs font-mono font-normal" inputMode="decimal" value={line.rejectedQuantity} onChange={(e) => onChange({ ...line, rejectedQuantity: e.target.value })} />
                 </label>
               </div>
               {Number(line.informedQuantity) >= 0 && line.informedQuantity !== "" && Number(line.receivedQuantity) !== Number(line.informedQuantity) ? (
-                <p className="text-sm text-orange-700">⚠️ Divergência informada/recebida: {Number(line.receivedQuantity) - Number(line.informedQuantity)}</p>
+                <p className="rounded-md border border-accentOrange bg-aptPendingBg px-md py-sm font-sans text-sm text-aptPendingText">Divergência informada/recebida: {Number(line.receivedQuantity) - Number(line.informedQuantity)}</p>
               ) : null}
               {Number(line.rejectedQuantity) > 0 ? (
-                <label className="block text-sm">Motivo do descarte *
-                  <input className="mt-1 w-full rounded border px-2 py-1" value={line.rejectionReason} onChange={(e) => onChange({ ...line, rejectionReason: e.target.value })} />
+                <label className="block font-sans text-sm font-semibold text-text">Motivo do descarte *
+                  <input className="field-input mt-xs font-normal" value={line.rejectionReason} onChange={(e) => onChange({ ...line, rejectionReason: e.target.value })} />
                 </label>
               ) : null}
               {line.requiresExpiration ? (
-                <label className="block text-sm">Validade *
-                  <input type="date" className="mt-1 w-full rounded border px-2 py-1" value={line.expiresOn} onChange={(e) => onChange({ ...line, expiresOn: e.target.value })} />
+                <label className="block font-sans text-sm font-semibold text-text">Validade *
+                  <input type="date" className="field-input mt-xs font-normal" value={line.expiresOn} onChange={(e) => onChange({ ...line, expiresOn: e.target.value })} />
                 </label>
               ) : null}
-              {lineError(line) ? <p className="text-sm text-orange-700">⚠️ {lineError(line)}</p> : null}
+              {lineError(line) ? <p className="rounded-md border border-accentOrange bg-aptPendingBg px-md py-sm font-sans text-sm text-aptPendingText">{lineError(line)}</p> : null}
             </div>
           )}
         />
-        <button type="button" onClick={() => void handleSubmit()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
+        <Button type="button" variant="primary" onClick={() => void handleSubmit()} disabled={loading}>
           Registrar transferência
-        </button>
+        </Button>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
-        <h3 className="font-semibold">Transferências</h3>
-        <table className="mt-2 w-full text-sm">
-          <thead><tr className="text-left"><th className="pr-2">Referência</th><th>Ações</th></tr></thead>
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
+        <h3 className="font-display text-lg font-semibold text-text-strong">Transferências</h3>
+        <table className="mt-sm w-full font-sans text-sm text-text">
+          <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Referência</th><th className="px-md py-sm font-bold text-secondary-dark">Ações</th></tr></thead>
           <tbody>
             {transfers.map((transfer) => (
-              <tr key={transfer.transferId} className="border-t">
-                <td className="pr-2">{transfer.externalReference}</td>
-                <td><Link to={`/inventory/bazar-transfers/${transfer.transferId}`} className="text-blue-700 underline">Ver</Link></td>
+              <tr key={transfer.transferId} className="border-b border-border">
+                <td className="px-md py-sm font-mono text-xs">{transfer.externalReference}</td>
+                <td className="px-md py-sm"><Link to={`/inventory/bazar-transfers/${transfer.transferId}`} className="font-sans text-sm font-semibold text-primary-action underline">Ver</Link></td>
               </tr>
             ))}
-            {transfers.length === 0 ? <tr><td colSpan={2} className="py-4 text-center text-gray-500">Nenhuma transferência</td></tr> : null}
+            {transfers.length === 0 ? <tr><td colSpan={2} className="py-md text-center font-sans text-sm text-text-muted">Nenhuma transferência</td></tr> : null}
           </tbody>
         </table>
       </div>

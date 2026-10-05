@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { PageHeader } from "../components/PageHeader.js";
 
 export function NotFoundPage() {
   return (
-    <div>
-      <h2 className="text-xl font-bold">Página não encontrada</h2>
-      <p className="mt-2 text-sm text-gray-600">O endereço acessado não existe.</p>
-      <Link to="/dashboard" className="mt-4 inline-block text-sm text-blue-700 underline">
+    <div className="bg-background">
+      <PageHeader title="Página não encontrada" />
+      <p className="mt-sm font-sans text-sm text-text-muted">O endereço acessado não existe.</p>
+      <Link to="/dashboard" className="mt-md inline-block font-sans text-sm font-semibold text-primary-action underline">
         Voltar ao painel
       </Link>
     </div>

@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../../../shared/presentation/components/ConfirmModal.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { Drawer } from "../../../../shared/presentation/components/Drawer.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
+import { StatusTag } from "../../../../shared/presentation/components/StatusTag.js";
 import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
 import { getFamily, searchFamilies } from "../../../registration/presentation/api/families.api.js";
 import { searchPersons } from "../../../registration/presentation/api/persons.api.js";
@@ -130,12 +135,12 @@ export function AttendancePage() {
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold">Atendimentos pontuais</h2>
+    <div className="mx-auto max-w-[960px]">
+      <PageHeader title="Atendimentos pontuais" />
 
-      <form onSubmit={handleSubmit} className="mt-4 rounded bg-white p-4 shadow">
-        <h3 className="mb-2 font-semibold">Registrar atendimento</h3>
-        <div className="grid gap-2">
+      <form onSubmit={handleSubmit} className="mt-md rounded-lg border border-border bg-surface p-lg">
+        <h3 className="font-display text-lg font-semibold text-text-strong">Registrar atendimento</h3>
+        <div className="mt-sm grid gap-md">
           <SearchSelect
             label="Família"
             placeholder="Digite ao menos 2 letras do nome ou código..."
@@ -158,10 +163,10 @@ export function AttendancePage() {
               })();
             }}
           />
-          <label className="block text-sm">
+          <label className="block font-sans text-sm font-semibold text-text">
             Atividade
             <select
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="field-input mt-xs font-normal"
               value={activityId}
               onChange={(e) => setActivityId(e.target.value)}
               required
@@ -194,47 +199,47 @@ export function AttendancePage() {
               })();
             }}
           />
-          <label className="block text-sm">
+          <label className="block font-sans text-sm font-semibold text-text">
             Data do fato
             <input
               type="date"
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="field-input mt-xs font-normal"
               value={occurredAt}
               max={today()}
               onChange={(e) => setOccurredAt(e.target.value)}
               required
             />
           </label>
-          <label className="block text-sm">
+          <label className="block font-sans text-sm font-semibold text-text">
             Nome do executor
             <input
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="field-input mt-xs font-normal"
               value={executorName}
               minLength={2}
               onChange={(e) => setExecutorName(e.target.value)}
               required
             />
           </label>
-          <label className="block text-sm">
+          <label className="block font-sans text-sm font-semibold text-text">
             Função do executor
             <input
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="field-input mt-xs font-normal"
               value={executorRole}
               minLength={2}
               onChange={(e) => setExecutorRole(e.target.value)}
               required
             />
           </label>
-          <label className="block text-sm">
+          <label className="block font-sans text-sm font-semibold text-text">
             Observação (opcional, máx 500)
             <textarea
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="field-input mt-xs h-auto min-h-[88px] py-sm font-normal"
               value={note}
               maxLength={500}
               onChange={(e) => setNote(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
+          <label className="flex items-center gap-sm font-sans text-sm font-semibold text-text">
             <input
               type="checkbox"
               checked={isHomeVisit}
@@ -243,10 +248,10 @@ export function AttendancePage() {
             Visita domiciliar
           </label>
           {isHomeVisit ? (
-            <label className="block text-sm">
+            <label className="block font-sans text-sm font-semibold text-text">
               Situação encontrada
               <input
-                className="mt-1 w-full rounded border px-2 py-1"
+                className="field-input mt-xs font-normal"
                 value={observedSituation}
                 onChange={(e) => setObservedSituation(e.target.value)}
                 required
@@ -254,71 +259,76 @@ export function AttendancePage() {
             </label>
           ) : null}
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-3 rounded bg-gray-800 px-4 py-2 text-white"
-        >
-          {loading ? "Registrando..." : "Registrar atendimento"}
-        </button>
+        <div className="mt-md">
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? "Registrando..." : "Registrar atendimento"}
+          </Button>
+        </div>
       </form>
 
-      {feedback ? <p className="mt-3 text-sm">{feedback}</p> : null}
+      {feedback ? <Alert tone="info" message={feedback} /> : null}
 
-      <div className="mt-6 rounded bg-white p-4 shadow">
-        <h3 className="mb-2 font-semibold">Atendimentos da família</h3>
-        <div className="flex flex-wrap gap-2">
-          <input type="date" className="rounded border px-2 py-1 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <input type="date" className="rounded border px-2 py-1 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
-          <button
+      <div className="mt-lg rounded-lg border border-border bg-surface p-lg">
+        <h3 className="font-display text-lg font-semibold text-text-strong">Atendimentos da família</h3>
+        <div className="mt-sm flex flex-wrap items-end gap-sm">
+          <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+            De
+            <input type="date" className="field-input w-auto font-normal" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+            Até
+            <input type="date" className="field-input w-auto font-normal" value={to} onChange={(e) => setTo(e.target.value)} />
+          </label>
+          <Button
             type="button"
             disabled={loading}
             onClick={handleSearch}
-            className="rounded bg-gray-200 px-4 py-2"
           >
             Buscar
-          </button>
+          </Button>
         </div>
-        <table className="mt-3 w-full text-sm">
+        <table className="mt-md w-full font-sans text-sm text-text">
           <thead>
-            <tr className="text-left">
-              <th className="pr-2">Data</th>
-              <th className="pr-2">Tipo</th>
-              <th className="pr-2">Executor</th>
-              <th className="pr-2">Status</th>
-              <th className="pr-2">Visita</th>
-              <th>Ações</th>
+            <tr className="border-b-2 border-secondary-border bg-tableHeader text-left">
+              <th className="px-md py-sm font-bold text-secondary-dark">Data</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Tipo</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Executor</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Status</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Visita</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Ações</th>
             </tr>
           </thead>
           <tbody>
             {records.map((record) => (
-              <tr key={record.serviceRecordId} className="border-t">
-                <td className="pr-2">{record.occurredAt}</td>
-                <td className="pr-2">{record.serviceTypeName}</td>
-                <td className="pr-2">
+              <tr key={record.serviceRecordId} className="border-b border-border">
+                <td className="px-md py-sm font-mono text-xs">{record.occurredAt}</td>
+                <td className="px-md py-sm">{record.serviceTypeName}</td>
+                <td className="px-md py-sm">
                   {record.executorName} ({record.executorRole})
                 </td>
-                <td className="pr-2">{record.status}</td>
-                <td className="pr-2" title={record.homeVisit?.observedSituation ?? ""}>
-                  {record.hasHomeVisit ? "🏠" : "—"}
+                <td className="px-md py-sm">{record.status === "COMPLETED" ? <StatusTag tone="neutral" icon="check_circle" label="Concluído" /> : <StatusTag tone="pending" icon="cancel" label={record.status} />}</td>
+                <td className="px-md py-sm" title={record.homeVisit?.observedSituation ?? ""}>
+                  {record.hasHomeVisit ? <StatusTag tone="info" icon="home" label="Visita" /> : "—"}
                 </td>
-                <td className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void (async () => { setDetail(await getServiceRecord(record.serviceRecordId)); })()}
-                    className="text-blue-700 underline"
-                  >
-                    Ver
-                  </button>
-                  {record.status === "COMPLETED" ? (
+                <td className="px-md py-sm">
+                  <div className="flex gap-sm">
                     <button
                       type="button"
-                      onClick={() => setCancelTarget(record)}
-                      className="rounded bg-red-100 px-2 py-1 text-red-800"
+                      onClick={() => void (async () => { setDetail(await getServiceRecord(record.serviceRecordId)); })()}
+                      className="font-sans text-sm font-semibold text-primary-action underline"
                     >
-                      Cancelar
+                      Ver
                     </button>
-                  ) : null}
+                    {record.status === "COMPLETED" ? (
+                      <button
+                        type="button"
+                        onClick={() => setCancelTarget(record)}
+                        className="font-sans text-sm font-semibold text-aptIneligibleText underline"
+                      >
+                        Cancelar
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -326,27 +336,27 @@ export function AttendancePage() {
         </table>
       </div>
 
-      {detail ? (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="w-96 rounded bg-white p-4 shadow">
-            <h3 className="mb-2 font-semibold">Atendimento {detail.occurredAt}</h3>
-            <dl className="grid gap-1 text-sm">
-              <div><dt className="font-bold">Tipo</dt><dd>{detail.serviceTypeName}</dd></div>
-              <div><dt className="font-bold">Executor</dt><dd>{detail.executorName} ({detail.executorRole})</dd></div>
-              <div><dt className="font-bold">Observação</dt><dd>{detail.note ?? "—"}</dd></div>
-              {detail.hasHomeVisit ? <div><dt className="font-bold">Visita domiciliar</dt><dd>{detail.homeVisit?.observedSituation ?? "—"}</dd></div> : null}
+      <Drawer open={detail !== null} title={detail ? `Atendimento ${detail.occurredAt}` : "Atendimento"} onClose={() => setDetail(null)}>
+        {detail ? (
+          <div>
+            <dl className="grid gap-sm font-sans text-sm text-text">
+              <div><dt className="font-semibold text-text-strong">Tipo</dt><dd>{detail.serviceTypeName}</dd></div>
+              <div><dt className="font-semibold text-text-strong">Executor</dt><dd>{detail.executorName} ({detail.executorRole})</dd></div>
+              <div><dt className="font-semibold text-text-strong">Observação</dt><dd>{detail.note ?? "—"}</dd></div>
+              {detail.hasHomeVisit ? <div><dt className="font-semibold text-text-strong">Visita domiciliar</dt><dd>{detail.homeVisit?.observedSituation ?? "—"}</dd></div> : null}
+              <div><dt className="font-semibold text-text-strong">Histórico de alterações</dt><dd className="text-text-muted">Correções e cancelamentos preservam autor, data do fato, data do lançamento e motivo.</dd></div>
             </dl>
-            <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => setNoteTarget(detail)} className="rounded bg-gray-200 px-4 py-2 text-sm">
+            <div className="mt-md flex gap-sm">
+              <Button type="button" onClick={() => setNoteTarget(detail)}>
                 Corrigir nota
-              </button>
-              <button type="button" onClick={() => setDetail(null)} className="rounded bg-gray-200 px-4 py-2 text-sm">
+              </Button>
+              <Button type="button" onClick={() => setDetail(null)}>
                 Fechar
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </Drawer>
 
       <ConfirmModal
         open={cancelTarget !== null}

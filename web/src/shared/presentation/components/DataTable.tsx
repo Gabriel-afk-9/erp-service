@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Button } from "./Button.js";
+import { EmptyState } from "./EmptyState.js";
 
 export interface TableColumn<T> {
   key: string;
@@ -24,19 +26,21 @@ export function DataTable<T>({ columns, rows, page, pageSize, total, onPageChang
 
   return (
     <div>
-      <table className="w-full text-sm">
+      <table className="w-full font-sans text-sm text-text">
         <thead>
-          <tr className="text-left">
+          <tr className="border-b-2 border-secondary-border bg-tableHeader text-left">
             {columns.map((column) => (
-              <th key={column.key} className="pr-2">{column.label}</th>
+              <th key={column.key} className="px-md py-sm font-sans text-sm font-bold text-secondary-dark">
+                {column.label}
+              </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="bg-surface">
           {rows.map((row, index) => (
-            <tr key={`${page}-${index}`} className="border-t">
+            <tr key={`${page}-${index}`} className="border-b border-border hover:bg-background">
               {columns.map((column) => (
-                <td key={column.key} className="pr-2">
+                <td key={column.key} className="px-md py-sm">
                   {column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? "—")}
                 </td>
               ))}
@@ -44,34 +48,32 @@ export function DataTable<T>({ columns, rows, page, pageSize, total, onPageChang
           ))}
           {rows.length === 0 && !loading ? (
             <tr>
-              <td colSpan={columns.length} className="py-4 text-center text-gray-500">
-                {emptyMessage ?? "Nenhum registro encontrado"}
+              <td colSpan={columns.length}>
+                <EmptyState title={emptyMessage ?? "Nenhum registro encontrado"} />
               </td>
             </tr>
           ) : null}
         </tbody>
       </table>
-      <div className="mt-2 flex items-center justify-between text-sm">
-        <span className="text-gray-600">
+      <div className="mt-md flex items-center justify-between font-sans text-sm">
+        <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
           {loading ? "Carregando..." : `Mostrando ${start}–${end} de ${total} registros`}
         </span>
-        <div className="flex gap-2">
-          <button
+        <div className="flex gap-sm">
+          <Button
             type="button"
-            className="rounded bg-gray-200 px-3 py-1 disabled:opacity-50"
             disabled={page <= 1 || loading}
             onClick={() => onPageChange(page - 1)}
           >
             Anterior
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="rounded bg-gray-200 px-3 py-1 disabled:opacity-50"
             disabled={page >= totalPages || loading}
             onClick={() => onPageChange(page + 1)}
           >
             Próxima
-          </button>
+          </Button>
         </div>
       </div>
     </div>

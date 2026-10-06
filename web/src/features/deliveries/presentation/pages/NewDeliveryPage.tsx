@@ -97,6 +97,12 @@ export function NewDeliveryPage() {
           label="Família"
           placeholder="Digite ao menos 2 letras do nome ou código..."
           selectedLabel={familyLabel}
+          onClear={() => {
+            setFamilyId("");
+            setFamilyLabel(undefined);
+            setEligibility(null);
+            setLots([]);
+          }}
           onSearch={async (query) => {
             const result = await searchFamilies({ q: query });
             return result.items.map((item) => ({ id: item.familyId, label: item.referenceName ?? "Sem nome", sublabel: item.code }));

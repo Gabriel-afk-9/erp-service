@@ -138,6 +138,7 @@ export function BazarPage() {
                 label="Item"
                 placeholder="Digite ao menos 2 letras..."
                 selectedLabel={line.itemName || undefined}
+                onClear={() => onChange({ ...line, itemId: "", itemName: "", requiresExpiration: false, unitSymbol: "" })}
                 onSearch={async (query) => {
                   const result = await listItems({ q: query });
                   return result.items.map((item) => ({ id: item.itemId, label: item.name, sublabel: item.unitSymbol }));

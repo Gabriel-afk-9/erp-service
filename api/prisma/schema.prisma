@@ -128,6 +128,7 @@ model ServiceRecord {
   recordedAt      DateTime                  @default(now()) @db.Timestamptz
   recordedBy      String
   note            String?
+  cancelReason    String?
   status          ServiceRecordStatus       @default(COMPLETED)
   revision        Int                       @default(1)
   homeVisit       HomeVisit?

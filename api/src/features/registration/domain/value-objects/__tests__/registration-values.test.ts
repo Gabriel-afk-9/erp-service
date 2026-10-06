@@ -15,12 +15,14 @@ describe("registration value objects", () => {
     expect(() => CivilDate.from("01/01/2024")).toThrow(CivilDateFormatError);
   });
 
-  it("normalizes CPF and rejects invalid check digits", () => {
+  it("normalizes CPF to 11 digits without validating check digits", () => {
     expect(Cpf.from("529.982.247-25")).toBe("52998224725");
+    expect(Cpf.from("11111111111")).toBe("11111111111");
+    expect(Cpf.from("12345678901")).toBe("12345678901");
     expect(Cpf.from(null)).toBeNull();
     expect(Cpf.from("   ")).toBeNull();
     expect(() => Cpf.from("123")).toThrow(CpfFormatError);
-    expect(() => Cpf.from("11111111111")).toThrow(CpfFormatError);
+    expect(() => Cpf.from("123456789012")).toThrow(CpfFormatError);
   });
 
   it("normalizes postal code and rejects invalid values", () => {

@@ -26,6 +26,7 @@ export class ListServiceRecordsByFamilyUseCase {
       recordedAt: record.recordedAt,
       recordedBy: record.recordedBy,
       note: record.note,
+      cancelReason: record.cancelReason,
       status: record.status,
       revision: record.revision,
       hasHomeVisit: homeVisit !== null,

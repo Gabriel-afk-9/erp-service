@@ -67,7 +67,7 @@ describe("CorrectServiceRecordNoteUseCase", () => {
   it("throws ServiceRecordAlreadyCanceledError for a canceled record", async () => {
     const repository = new FakeServiceRecordRepository();
     const record = await seedActive(repository);
-    record.cancel();
+    record.cancel("Duplicado por engano");
     const useCase = new CorrectServiceRecordNoteUseCase(repository);
     await expect(
       useCase.execute({

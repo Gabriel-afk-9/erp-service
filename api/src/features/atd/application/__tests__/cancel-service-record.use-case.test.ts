@@ -48,6 +48,7 @@ describe("CancelServiceRecordUseCase", () => {
     });
     expect(output.status).toBe("CANCELED");
     expect(output.revision).toBe(2);
+    expect(record.cancelReason).toBe("Lancamento em duplicidade");
   });
 
   it("throws ServiceRecordNotFoundError for an unknown id", async () => {

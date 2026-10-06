@@ -12,10 +12,11 @@ interface SearchSelectProps {
   onSearch: (query: string) => Promise<SearchOption[]>;
   onSelect: (id: string) => void;
   selectedLabel?: string;
+  onClear?: () => void;
   disabled?: boolean;
 }
 
-export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedLabel, disabled }: SearchSelectProps) {
+export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedLabel, onClear, disabled }: SearchSelectProps) {
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<SearchOption[]>([]);
   const [open, setOpen] = useState(false);
@@ -68,20 +69,44 @@ export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedL
     setOpen(false);
   }
 
+  function handleClear(): void {
+    setQuery("");
+    setOptions([]);
+    setOpen(false);
+    onClear?.();
+  }
+
+  const showClear = selectedLabel !== undefined && onClear !== undefined && !disabled;
+
   return (
     <div ref={containerRef} className="relative">
       <label className="block font-sans text-sm font-semibold text-text">
         {label}
-        <input
-          className="field-input mt-xs font-normal"
-          placeholder={placeholder}
-          value={selectedLabel ?? query}
-          disabled={disabled}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => {
-            if (options.length > 0) setOpen(true);
-          }}
-        />
+        <span className="relative mt-xs block">
+          <input
+            className={`field-input font-normal ${showClear ? "pr-10" : ""}`}
+            placeholder={placeholder}
+            value={selectedLabel ?? query}
+            disabled={disabled}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => {
+              if (options.length > 0) setOpen(true);
+            }}
+          />
+          {showClear ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              aria-label="Limpar seleção"
+              title="Limpar seleção"
+              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-text-muted hover:bg-background hover:text-text-strong"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                close
+              </span>
+            </button>
+          ) : null}
+        </span>
       </label>
       {open ? (
         <ul className="absolute z-10 max-h-48 w-full overflow-auto rounded-md border border-border bg-surface shadow-[0_4px_16px_-2px_rgba(92,75,50,0.08)]">

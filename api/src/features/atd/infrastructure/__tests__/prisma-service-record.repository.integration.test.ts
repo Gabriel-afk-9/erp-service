@@ -85,7 +85,7 @@ describe("PrismaServiceRecordRepository", () => {
       after: null,
       reason: null,
     });
-    record.cancel();
+    record.cancel("Duplicidade");
     await repository.save(record, null, {
       operation: "CANCELED",
       performedBy: "11111111-1111-1111-1111-111111111111",

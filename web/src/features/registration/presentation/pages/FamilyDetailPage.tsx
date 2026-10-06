@@ -734,7 +734,8 @@ export function FamilyDetailPage() {
                 <tr className="border-b-2 border-secondary-border bg-tableHeader text-left">
                   <th className="px-md py-sm font-bold text-secondary-dark">Data</th>
                   <th className="px-md py-sm font-bold text-secondary-dark">Tipo</th>
-                  <th className="px-md py-sm font-bold text-secondary-dark">Executor</th>
+                  <th className="px-md py-sm font-bold text-secondary-dark">Nome do executor</th>
+                  <th className="px-md py-sm font-bold text-secondary-dark">Função do executor</th>
                   <th className="px-md py-sm font-bold text-secondary-dark">Status</th>
                   <th className="px-md py-sm font-bold text-secondary-dark">Ações</th>
                 </tr>
@@ -745,6 +746,7 @@ export function FamilyDetailPage() {
                     <td className="px-md py-sm font-mono text-xs">{formatDate(record.occurredAt)}</td>
                     <td className="px-md py-sm">{record.serviceTypeName}</td>
                     <td className="px-md py-sm">{record.executorName}</td>
+                    <td className="px-md py-sm">{record.executorRole}</td>
                     <td className="px-md py-sm">
                       {record.status === "COMPLETED" ? (
                         <StatusTag tone="neutral" icon="check_circle" label="Concluído" />
@@ -765,7 +767,7 @@ export function FamilyDetailPage() {
                 ))}
                 {services.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-md text-center font-sans text-sm text-text-muted">
+                    <td colSpan={6} className="py-md text-center font-sans text-sm text-text-muted">
                       Nenhum atendimento registrado
                     </td>
                   </tr>
@@ -807,6 +809,12 @@ export function FamilyDetailPage() {
               <dt className="font-semibold text-text-strong">Observação</dt>
               <dd>{serviceDetail.note ?? "—"}</dd>
             </div>
+            {serviceDetail.status === "CANCELED" ? (
+              <div>
+                <dt className="font-semibold text-text-strong">Motivo do cancelamento</dt>
+                <dd>{serviceDetail.cancelReason ?? "—"}</dd>
+              </div>
+            ) : null}
             {serviceDetail.hasHomeVisit ? (
               <div>
                 <dt className="font-semibold text-text-strong">Visita domiciliar</dt>

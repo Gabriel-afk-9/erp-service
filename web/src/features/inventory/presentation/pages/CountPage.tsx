@@ -120,6 +120,13 @@ export function CountPage() {
               label="Item"
               placeholder="Digite ao menos 2 letras..."
               selectedLabel={itemName || undefined}
+              onClear={() => {
+                setItemId("");
+                setItemName("");
+                setUnitId("");
+                setLotId("");
+                setLotOptions([]);
+              }}
               onSearch={async (query) => {
                 const result = await listItems({ q: query });
                 return result.items.map((item) => ({ id: item.itemId, label: item.name, sublabel: item.unitSymbol }));

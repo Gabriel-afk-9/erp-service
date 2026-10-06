@@ -11,10 +11,12 @@ import { searchPersons } from "../../../registration/presentation/api/persons.ap
 import {
     cancelServiceRecord,
     correctServiceRecordNote,
+    formatActivityLabel,
     getServiceRecord,
     listActivities,
     listServiceRecords,
     registerServiceRecord,
+    type ActivityOption,
     type ServiceRecordItem,
 } from "../api/service-records.api";
 
@@ -25,7 +27,7 @@ function today(): string {
 export function AttendancePage() {
   const [familyId, setFamilyId] = useState("");
   const [familyLabel, setFamilyLabel] = useState<string | undefined>(undefined);
-  const [activities, setActivities] = useState<{ activityId: string; name: string; serviceTypeName: string }[]>([]);
+  const [activities, setActivities] = useState<ActivityOption[]>([]);
   const [activityId, setActivityId] = useState("");
   const [personId, setPersonId] = useState("");
   const [personLabel, setPersonLabel] = useState<string | undefined>(undefined);
@@ -35,7 +37,6 @@ export function AttendancePage() {
   const [executorName, setExecutorName] = useState("");
   const [executorRole, setExecutorRole] = useState("");
   const [note, setNote] = useState("");
-  const [isHomeVisit, setIsHomeVisit] = useState(false);
   const [observedSituation, setObservedSituation] = useState("");
   const [records, setRecords] = useState<ServiceRecordItem[]>([]);
   const [detail, setDetail] = useState<ServiceRecordItem | null>(null);
@@ -56,15 +57,11 @@ export function AttendancePage() {
     })();
   }, []);
 
-  async function handleSearch(): Promise<void> {
-    if (!familyId) {
-      setFeedback("Selecione a família.");
-      return;
-    }
+  async function loadRecords(id: string): Promise<void> {
     setLoading(true);
     setFeedback(null);
     try {
-      setRecords(await listServiceRecords(familyId, { from: from || undefined, to: to || undefined }));
+      setRecords(await listServiceRecords(id, { from: from || undefined, to: to || undefined }));
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -72,10 +69,56 @@ export function AttendancePage() {
     }
   }
 
+  // Reload the family timeline whenever the selected family changes, so the
+  // list below always reflects the family currently in the form.
+  useEffect(() => {
+    if (!familyId) {
+      setRecords([]);
+      setDetail(null);
+      setCancelTarget(null);
+      setNoteTarget(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setFeedback(null);
+    listServiceRecords(familyId, { from: from || undefined, to: to || undefined })
+      .then((loaded) => {
+        if (!cancelled) setRecords(loaded);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setFeedback(error instanceof Error ? error.message : "Erro inesperado");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familyId]);
+
+  async function handleSearch(): Promise<void> {
+    if (!familyId) {
+      setFeedback("Selecione a família.");
+      return;
+    }
+    await loadRecords(familyId);
+  }
+
+  // The visit detail is derived from the selected activity type (SPEC-ATD section 3):
+  // HOME_VISIT requires it, every other type forbids it. No checkbox needed.
+  const selectedActivity = activities.find((activity) => activity.activityId === activityId);
+  const isHomeVisitActivity = selectedActivity?.serviceTypeCode === "HOME_VISIT";
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     if (!familyId || !activityId) {
       setFeedback("Selecione a família e a atividade.");
+      return;
+    }
+    if (isHomeVisitActivity && observedSituation.trim() === "") {
+      setFeedback("Informe a situação encontrada para a visita domiciliar.");
       return;
     }
     setLoading(true);
@@ -86,13 +129,14 @@ export function AttendancePage() {
         executorName: executorName.trim(),
         executorRole: executorRole.trim(),
         familyId,
-        homeVisit: isHomeVisit ? { observedSituation: observedSituation.trim() } : null,
+        homeVisit: isHomeVisitActivity ? { observedSituation: observedSituation.trim() } : null,
         note: note.trim() === "" ? null : note,
         occurredAt,
         personId: personId || null,
       });
       setFeedback(`Atendimento registrado: ${created.serviceRecordId}`);
-      setRecords(await listServiceRecords(familyId));
+      setObservedSituation("");
+      await loadRecords(familyId);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -107,7 +151,7 @@ export function AttendancePage() {
       await cancelServiceRecord(cancelTarget.serviceRecordId, values.reason ?? "", cancelTarget.revision);
       setCancelTarget(null);
       setFeedback("Atendimento cancelado");
-      if (familyId) setRecords(await listServiceRecords(familyId));
+      if (familyId) await loadRecords(familyId);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -126,7 +170,7 @@ export function AttendancePage() {
       });
       setNoteTarget(null);
       setDetail(await getServiceRecord(noteTarget.serviceRecordId));
-      if (familyId) setRecords(await listServiceRecords(familyId));
+      if (familyId) await loadRecords(familyId);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
@@ -145,6 +189,12 @@ export function AttendancePage() {
             label="Família"
             placeholder="Digite ao menos 2 letras do nome ou código..."
             selectedLabel={familyLabel}
+            onClear={() => {
+              setFamilyId("");
+              setFamilyLabel(undefined);
+              setPersonId("");
+              setPersonLabel(undefined);
+            }}
             onSearch={async (query) => {
               const result = await searchFamilies({ q: query });
               return result.items.map((item) => ({ id: item.familyId, label: item.referenceName ?? "Sem nome", sublabel: item.code }));
@@ -173,7 +223,7 @@ export function AttendancePage() {
             >
               {activities.map((option) => (
                 <option key={option.activityId} value={option.activityId}>
-                  {option.name} ({option.serviceTypeName})
+                  {formatActivityLabel(option)}
                 </option>
               ))}
             </select>
@@ -182,6 +232,10 @@ export function AttendancePage() {
             label="Pessoa atendida (opcional — vazio = família)"
             placeholder="Digite ao menos 2 letras..."
             selectedLabel={personLabel}
+            onClear={() => {
+              setPersonId("");
+              setPersonLabel(undefined);
+            }}
             onSearch={async (query) => {
               const result = await searchPersons({ familyId: familyId || undefined, q: query });
               return result.items.map((item) => ({ id: item.personId, label: item.name }));
@@ -239,23 +293,18 @@ export function AttendancePage() {
               onChange={(e) => setNote(e.target.value)}
             />
           </label>
-          <label className="flex items-center gap-sm font-sans text-sm font-semibold text-text">
-            <input
-              type="checkbox"
-              checked={isHomeVisit}
-              onChange={(e) => setIsHomeVisit(e.target.checked)}
-            />{" "}
-            Visita domiciliar
-          </label>
-          {isHomeVisit ? (
+          {isHomeVisitActivity ? (
             <label className="block font-sans text-sm font-semibold text-text">
-              Situação encontrada
+              Situação encontrada <span aria-hidden="true" className="text-coral">*</span>
               <input
                 className="field-input mt-xs font-normal"
                 value={observedSituation}
                 onChange={(e) => setObservedSituation(e.target.value)}
                 required
               />
+              <span className="mt-xs block font-sans text-xs font-normal text-text-muted">
+                Obrigatória para visita domiciliar
+              </span>
             </label>
           ) : null}
         </div>
@@ -292,7 +341,8 @@ export function AttendancePage() {
             <tr className="border-b-2 border-secondary-border bg-tableHeader text-left">
               <th className="px-md py-sm font-bold text-secondary-dark">Data</th>
               <th className="px-md py-sm font-bold text-secondary-dark">Tipo</th>
-              <th className="px-md py-sm font-bold text-secondary-dark">Executor</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Nome do executor</th>
+              <th className="px-md py-sm font-bold text-secondary-dark">Função do executor</th>
               <th className="px-md py-sm font-bold text-secondary-dark">Status</th>
               <th className="px-md py-sm font-bold text-secondary-dark">Visita</th>
               <th className="px-md py-sm font-bold text-secondary-dark">Ações</th>
@@ -303,10 +353,9 @@ export function AttendancePage() {
               <tr key={record.serviceRecordId} className="border-b border-border">
                 <td className="px-md py-sm font-mono text-xs">{record.occurredAt}</td>
                 <td className="px-md py-sm">{record.serviceTypeName}</td>
-                <td className="px-md py-sm">
-                  {record.executorName} ({record.executorRole})
-                </td>
-                <td className="px-md py-sm">{record.status === "COMPLETED" ? <StatusTag tone="neutral" icon="check_circle" label="Concluído" /> : <StatusTag tone="pending" icon="cancel" label={record.status} />}</td>
+                <td className="px-md py-sm">{record.executorName}</td>
+                <td className="px-md py-sm">{record.executorRole}</td>
+                <td className="px-md py-sm">{record.status === "COMPLETED" ? <StatusTag tone="neutral" icon="check_circle" label="Concluído" /> : <StatusTag tone="pending" icon="cancel" label="Cancelado" />}</td>
                 <td className="px-md py-sm" title={record.homeVisit?.observedSituation ?? ""}>
                   {record.hasHomeVisit ? <StatusTag tone="info" icon="home" label="Visita" /> : "—"}
                 </td>
@@ -343,6 +392,12 @@ export function AttendancePage() {
               <div><dt className="font-semibold text-text-strong">Tipo</dt><dd>{detail.serviceTypeName}</dd></div>
               <div><dt className="font-semibold text-text-strong">Executor</dt><dd>{detail.executorName} ({detail.executorRole})</dd></div>
               <div><dt className="font-semibold text-text-strong">Observação</dt><dd>{detail.note ?? "—"}</dd></div>
+              {detail.status === "CANCELED" ? (
+                <div>
+                  <dt className="font-semibold text-text-strong">Motivo do cancelamento</dt>
+                  <dd>{detail.cancelReason ?? "—"}</dd>
+                </div>
+              ) : null}
               {detail.hasHomeVisit ? <div><dt className="font-semibold text-text-strong">Visita domiciliar</dt><dd>{detail.homeVisit?.observedSituation ?? "—"}</dd></div> : null}
               <div><dt className="font-semibold text-text-strong">Histórico de alterações</dt><dd className="text-text-muted">Correções e cancelamentos preservam autor, data do fato, data do lançamento e motivo.</dd></div>
             </dl>

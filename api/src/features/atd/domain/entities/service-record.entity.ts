@@ -23,6 +23,7 @@ export interface ServiceRecordProps {
   recordedAt: Instant;
   recordedBy: string;
   note: string | null;
+  cancelReason: string | null;
   status: ServiceRecordStatus;
   revision: number;
 }
@@ -58,6 +59,7 @@ export class ServiceRecord {
     return new ServiceRecord({
       ...input,
       note: normalizeNote(input.note),
+      cancelReason: null,
       status: "COMPLETED",
       revision: 1,
     });
@@ -115,6 +117,10 @@ export class ServiceRecord {
     return this.props.note;
   }
 
+  get cancelReason(): string | null {
+    return this.props.cancelReason;
+  }
+
   get status(): ServiceRecordStatus {
     return this.props.status;
   }
@@ -123,11 +129,11 @@ export class ServiceRecord {
     return this.props.revision;
   }
 
-  cancel(): void {
+  cancel(reason: string): void {
     if (this.props.status === "CANCELED") {
       throw new ServiceRecordAlreadyCanceledError(this.props.id);
     }
-    this.props = { ...this.props, status: "CANCELED", revision: this.props.revision + 1 };
+    this.props = { ...this.props, status: "CANCELED", cancelReason: reason, revision: this.props.revision + 1 };
   }
 
   correctNote(newNote: string | null): void {

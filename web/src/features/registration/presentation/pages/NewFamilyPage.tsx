@@ -103,6 +103,7 @@ export function NewFamilyPage() {
   // Screen 2 — first member and tie.
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [sex, setSex] = useState<"" | "MALE" | "FEMALE" | "OTHER">("");
   const [cpf, setCpf] = useState("");
   const [rg, setRg] = useState("");
   const [memberPhone, setMemberPhone] = useState("");
@@ -175,6 +176,7 @@ export function NewFamilyPage() {
       await registerPerson({
         name: name.trim(),
         birthDate: birthDate || null,
+        sex: sex || null,
         cpf: cpf.trim() || null,
         rg: rg.trim() || null,
         contactPhone: memberPhone.trim() || null,
@@ -464,6 +466,23 @@ export function NewFamilyPage() {
                 </p>
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label className="font-sans text-sm font-semibold text-text" htmlFor="member-sex">
+                  Sexo
+                </label>
+                <select
+                  id="member-sex"
+                  className="h-11 w-full rounded-lg bg-surface px-3.5 font-sans text-base text-text shadow-sm outline-none"
+                  value={sex}
+                  onChange={(e) => setSex(e.target.value as "" | "MALE" | "FEMALE" | "OTHER")}
+                >
+                  <option value="">—</option>
+                  <option value="MALE">Masculino</option>
+                  <option value="FEMALE">Feminino</option>
+                  <option value="OTHER">Outro</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="font-sans text-sm font-semibold text-text" htmlFor="member-doc">
@@ -566,16 +585,10 @@ export function NewFamilyPage() {
                     type="date"
                     required
                     max={today()}
-                    className="h-11 w-full rounded-lg bg-surface py-sm pl-3.5 pr-9 font-sans text-base text-text shadow-sm outline-none"
+                    className="h-11 w-full rounded-lg bg-surface px-3.5 font-sans text-base text-text shadow-sm outline-none"
                     value={validFrom}
                     onChange={(e) => setValidFrom(e.target.value)}
                   />
-                  <span
-                    className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-text-muted"
-                    aria-hidden="true"
-                  >
-                    calendar_today
-                  </span>
                 </div>
                 <p className="font-sans text-xs text-text-muted">Data de abertura da assistência (datas futuras não permitidas)</p>
               </div>

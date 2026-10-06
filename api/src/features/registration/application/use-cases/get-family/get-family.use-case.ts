@@ -18,9 +18,16 @@ export class GetFamilyUseCase {
     if (family === null) {
       throw new FamilyNotFoundError(input.familyId);
     }
+    const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+    const todayDefault = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()) as CivilDate;
     const asOf =
       input.asOf === undefined || input.asOf === ""
-        ? (new Date().toISOString().slice(0, 10) as CivilDate)
+        ? todayDefault
         : CivilDate.from(input.asOf);
     const all = await this.memberships.findAllByFamily(input.familyId);
     const members: FamilyMemberItem[] = [];

@@ -2,7 +2,7 @@ import type { CivilDate } from "../../../../shared/domain/value-objects/civil-da
 import type { HomeVisit } from "../entities/home-visit.entity.js";
 import type { ServiceRecord } from "../entities/service-record.entity.js";
 
-export type ServiceRecordAuditOperation = "CREATED" | "CANCELED" | "NOTE_CORRECTED";
+export type ServiceRecordAuditOperation = "CREATED" | "CANCELED" | "NOTE_CORRECTED" | "REVERSED";
 
 export interface ServiceRecordAuditInput {
   operation: ServiceRecordAuditOperation;

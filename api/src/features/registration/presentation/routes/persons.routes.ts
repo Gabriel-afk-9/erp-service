@@ -14,6 +14,8 @@ import { InvalidDateRangeError } from "../../domain/errors/invalid-date-range.er
 import { PersonAlreadyMemberError } from "../../domain/errors/person-already-member.error.js";
 import { PersonNameInvalidError } from "../../domain/errors/person-name-invalid.error.js";
 import { PersonNotFoundError } from "../../domain/errors/person-not-found.error.js";
+import { TextTooLongError } from "../../domain/errors/text-too-long.error.js";
+import { CivilDateFormatError } from "../../../../shared/domain/errors/civil-date-format.error.js";
 
 export interface PersonRouteDeps {
   register: RegisterPersonUseCase;
@@ -36,7 +38,9 @@ function toStatusCode(error: unknown): number {
   if (
     error instanceof InvalidDateRangeError ||
     error instanceof CpfFormatError ||
-    error instanceof PersonNameInvalidError
+    error instanceof PersonNameInvalidError ||
+    error instanceof TextTooLongError ||
+    error instanceof CivilDateFormatError
   ) {
     return 422;
   }
@@ -49,46 +53,58 @@ async function sendError(reply: FastifyReply, error: unknown): Promise<void> {
   await reply.status(status).send({ code: (error as DomainError).code, message: (error as Error).message });
 }
 
-const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const CIVIL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function isCalendarDate(raw: string): boolean {
+  if (!CIVIL_DATE_PATTERN.test(raw)) return false;
+  const [yearRaw, monthRaw, dayRaw] = raw.split("-");
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  if (month < 1 || month > 12) return false;
+  const daysInMonth = new Date(Date.UTC(Number(yearRaw), month, 0)).getUTCDate();
+  return day >= 1 && day <= daysInMonth;
+}
+
+const civilDateField = z.string().trim().refine(isCalendarDate, { message: "Expected a valid YYYY-MM-DD calendar date" });
 
 const registerPersonBodySchema = z
   .object({
-    name: z.string().min(2),
-    birthDate: z.string().regex(CIVIL_DATE).nullish(),
+    name: z.string().trim().min(2).max(200),
+    birthDate: civilDateField.nullish(),
     sex: z.enum(["MALE", "FEMALE", "OTHER"]).nullish(),
-    cpf: z.string().nullish(),
-    rg: z.string().max(30).nullish(),
-    occupation: z.string().max(100).nullish(),
-    educationLevel: z.string().max(100).nullish(),
-    contactPhone: z.string().max(50).nullish(),
-    familyId: z.string().min(1),
-    validFrom: z.string().regex(CIVIL_DATE),
-    relationshipToReference: z.string().max(100).nullish(),
+    cpf: z.string().trim().max(50).nullish(),
+    rg: z.string().trim().max(30).nullish(),
+    occupation: z.string().trim().max(100).nullish(),
+    educationLevel: z.string().trim().max(100).nullish(),
+    contactPhone: z.string().trim().max(50).nullish(),
+    familyId: z.string().trim().uuid(),
+    validFrom: civilDateField,
+    relationshipToReference: z.string().trim().max(100).nullish(),
     isReference: z.boolean(),
   })
   .strict();
 
 const correctPersonBodySchema = z
   .object({
-    name: z.string().min(2).optional(),
-    contactPhone: z.string().max(50).nullish(),
-    occupation: z.string().max(100).nullish(),
-    educationLevel: z.string().max(100).nullish(),
-    reason: z.string().min(3),
+    name: z.string().trim().min(2).max(200).optional(),
+    contactPhone: z.string().trim().max(50).nullish(),
+    occupation: z.string().trim().max(100).nullish(),
+    educationLevel: z.string().trim().max(100).nullish(),
+    reason: z.string().trim().min(3).max(1000),
     expectedRevision: z.number().int().positive(),
   })
   .strict();
 
-const idParamsSchema = z.object({ id: z.string().min(1) }).strict();
+const idParamsSchema = z.object({ id: z.string().trim().uuid() }).strict();
 
 const listQuerySchema = z
   .object({
-    q: z.string().optional(),
-    cpf: z.string().optional(),
-    familyId: z.string().optional(),
-    page: z.coerce.number().int().positive().optional(),
-    pageSize: z.coerce.number().int().positive().optional(),
-    asOf: z.string().regex(CIVIL_DATE).optional(),
+    q: z.string().trim().min(2).max(200).optional(),
+    cpf: z.string().trim().max(50).optional(),
+    familyId: z.string().trim().uuid().optional(),
+    page: z.coerce.number().int().min(1).max(100).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+    asOf: civilDateField.optional(),
   })
   .strict();
 
@@ -99,7 +115,7 @@ export async function registerPersonRoutes(app: FastifyInstance, deps: PersonRou
     async (request, reply) => {
       const parsed = registerPersonBodySchema.safeParse(request.body);
       if (!parsed.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person payload", details: parsed.error.flatten().fieldErrors });
         return;
       }
       try {
@@ -117,7 +133,7 @@ export async function registerPersonRoutes(app: FastifyInstance, deps: PersonRou
     async (request, reply) => {
       const query = listQuerySchema.safeParse(request.query);
       if (!query.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person query" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person query", details: query.error.flatten().fieldErrors });
         return;
       }
       try {
@@ -136,7 +152,7 @@ export async function registerPersonRoutes(app: FastifyInstance, deps: PersonRou
       const params = idParamsSchema.safeParse(request.params);
       const query = listQuerySchema.safeParse(request.query);
       if (!params.success || !query.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person id" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person id", details: !params.success ? params.error.flatten().fieldErrors : query.success === false ? query.error.flatten().fieldErrors : undefined });
         return;
       }
       try {
@@ -155,7 +171,7 @@ export async function registerPersonRoutes(app: FastifyInstance, deps: PersonRou
       const params = idParamsSchema.safeParse(request.params);
       const body = correctPersonBodySchema.safeParse(request.body);
       if (!params.success || !body.success) {
-        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person correction payload" });
+        await reply.status(400).send({ code: "VALIDATION_ERROR", message: "Invalid person correction payload", details: !body.success ? body.error.flatten().fieldErrors : params.success === false ? params.error.flatten().fieldErrors : undefined });
         return;
       }
       try {

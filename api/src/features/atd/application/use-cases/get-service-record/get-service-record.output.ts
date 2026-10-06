@@ -1,3 +1,5 @@
+import type { ServiceRecordStatus } from "../../../domain/entities/service-record.entity.js";
+
 export interface ServiceRecordHomeVisitOutput {
   observedSituation: string;
 }
@@ -14,7 +16,8 @@ export interface GetServiceRecordOutput {
   recordedAt: string;
   recordedBy: string;
   note: string | null;
-  status: "COMPLETED" | "CANCELED";
+  cancelReason: string | null;
+  status: ServiceRecordStatus;
   revision: number;
   homeVisit: ServiceRecordHomeVisitOutput | null;
 }

@@ -1,6 +1,7 @@
 import type { CivilDate } from "../../../../shared/domain/value-objects/civil-date.value-object.js";
 import { Id } from "../../../../shared/domain/value-objects/id.value-object.js";
 import { InvalidDateRangeError } from "../errors/invalid-date-range.error.js";
+import { TextTooLongError } from "../errors/text-too-long.error.js";
 
 export interface MembershipProps {
   id: string;
@@ -30,12 +31,18 @@ export class FamilyMembership {
     if (input.validFrom > today) {
       throw new InvalidDateRangeError("membership start cannot be in the future");
     }
-    const relationship =
-      input.relationshipToReference === null ||
-      input.relationshipToReference === undefined ||
-      input.relationshipToReference.trim() === ""
-        ? null
-        : input.relationshipToReference.trim().slice(0, MAX_RELATIONSHIP);
+    let relationship: string | null = null;
+    if (
+      input.relationshipToReference !== null &&
+      input.relationshipToReference !== undefined &&
+      input.relationshipToReference.trim() !== ""
+    ) {
+      const trimmed = input.relationshipToReference.trim();
+      if (trimmed.length > MAX_RELATIONSHIP) {
+        throw new TextTooLongError("relationshipToReference", MAX_RELATIONSHIP);
+      }
+      relationship = trimmed;
+    }
     return new FamilyMembership({
       id: Id.generate(),
       personId: input.personId,

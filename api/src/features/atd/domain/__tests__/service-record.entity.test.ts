@@ -48,17 +48,19 @@ describe("ServiceRecord", () => {
     ).toThrow(FutureDateError);
   });
 
-  it("cancel moves status to CANCELED and increments revision", () => {
+  it("cancel moves status to CANCELED, stores the reason and increments revision", () => {
     const record = ServiceRecord.create(makeProps());
-    record.cancel();
+    expect(record.cancelReason).toBeNull();
+    record.cancel("Duplicado por engano");
     expect(record.status).toBe("CANCELED");
+    expect(record.cancelReason).toBe("Duplicado por engano");
     expect(record.revision).toBe(2);
   });
 
   it("cancel on an already canceled record throws", () => {
     const record = ServiceRecord.create(makeProps());
-    record.cancel();
-    expect(() => record.cancel()).toThrow(ServiceRecordAlreadyCanceledError);
+    record.cancel("Primeiro motivo");
+    expect(() => record.cancel("Outro motivo")).toThrow(ServiceRecordAlreadyCanceledError);
   });
 
   it("correctNote updates the note and increments revision", () => {
@@ -70,7 +72,7 @@ describe("ServiceRecord", () => {
 
   it("correctNote on a canceled record throws", () => {
     const record = ServiceRecord.create(makeProps());
-    record.cancel();
+    record.cancel("Duplicado por engano");
     expect(() => record.correctNote("Nova nota")).toThrow(ServiceRecordAlreadyCanceledError);
   });
 });

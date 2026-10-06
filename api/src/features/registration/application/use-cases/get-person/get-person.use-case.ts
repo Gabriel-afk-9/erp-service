@@ -18,9 +18,16 @@ export class GetPersonUseCase {
     if (person === null) {
       throw new PersonNotFoundError(input.personId);
     }
+    const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+    const todayDefault = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()) as CivilDate;
     const asOf =
       input.asOf === undefined || input.asOf === ""
-        ? (new Date().toISOString().slice(0, 10) as CivilDate)
+        ? todayDefault
         : CivilDate.from(input.asOf);
     const active = await this.memberships.findActiveByPerson(input.personId, asOf);
     let currentFamilyCode: string | null = null;

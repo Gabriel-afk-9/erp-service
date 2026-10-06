@@ -33,6 +33,7 @@ interface PersistedRecord {
   recordedAt: Date;
   recordedBy: string;
   note: string | null;
+  cancelReason: string | null;
   status: "COMPLETED" | "CANCELED";
   revision: number;
   homeVisit: PersistedHomeVisit | null;
@@ -60,6 +61,7 @@ function toDetail(row: PersistedRecord): ServiceRecordDetail {
     recordedAt: row.recordedAt.toISOString() as Instant,
     recordedBy: row.recordedBy,
     note: row.note,
+    cancelReason: row.cancelReason,
     status: row.status,
     revision: row.revision,
   });
@@ -95,6 +97,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
             recordedAt: new Date(record.recordedAt),
             recordedBy: record.recordedBy,
             note: record.note,
+            cancelReason: record.cancelReason,
             status: record.status,
             revision: record.revision,
           },
@@ -102,7 +105,7 @@ export class PrismaServiceRecordRepository implements ServiceRecordRepository {
       } else {
         const updated = await tx.serviceRecord.updateMany({
           where: { id: record.id, revision: record.revision - 1 },
-          data: { status: record.status, note: record.note, revision: record.revision },
+          data: { status: record.status, note: record.note, cancelReason: record.cancelReason, revision: record.revision },
         });
         if (updated.count === 0) {
           const current = await tx.serviceRecord.findUnique({ where: { id: record.id } });

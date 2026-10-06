@@ -2,6 +2,7 @@
   "name": "erp-service",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.4.0",
   "scripts": {
     "dev:api": "pnpm --dir api dev",
     "dev:web": "pnpm --dir web dev",
@@ -13,6 +14,7 @@
     "db:migrate": "pnpm --dir api db:migrate",
     "db:generate": "pnpm --dir api db:generate",
     "db:seed": "pnpm --dir api db:seed",
+    "db:reset": "pnpm --dir api db:reset",
     "build:api": "pnpm --dir api build",
     "build:web": "pnpm --dir web build"
   },

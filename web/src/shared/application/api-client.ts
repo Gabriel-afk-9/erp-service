@@ -24,6 +24,10 @@ async function request(path: string, options: RequestInit): Promise<unknown> {
     },
   });
   handleUnauthorized(response);
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`HTTP ${response.status} ${response.statusText || "erro"}: resposta inesperada do servidor`);
+  }
   return response.json();
 }
 

@@ -13,9 +13,16 @@ export class SearchFamiliesUseCase {
 
   async execute(input: SearchFamiliesInput): Promise<SearchFamiliesOutput> {
     const pagination = normalizePagination(input.page, input.pageSize);
-    const query = input.code !== undefined && input.code !== "" ? input.code : (input.q ?? "");
+    const rawQuery = input.code !== undefined && input.code.trim() !== "" ? input.code : (input.q ?? "");
+    const query = rawQuery.trim();
+    const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()) as CivilDate;
     const page = await this.families.findByQuery(query, pagination);
-    const today = new Date().toISOString().slice(0, 10) as CivilDate;
     const items: FamilyListItem[] = [];
     for (const family of page.items) {
       const active = await this.memberships.findActiveByFamily(family.id, today);

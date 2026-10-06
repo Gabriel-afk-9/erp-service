@@ -13,7 +13,13 @@ export class AddFamilyMemberUseCase {
 
   async execute(input: AddFamilyMemberInput): Promise<AddFamilyMemberOutput> {
     const validFrom = CivilDate.from(input.validFrom);
-    const today = new Date().toISOString().slice(0, 10) as CivilDate;
+    const timeZone = process.env.APP_TIMEZONE ?? "America/Fortaleza";
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()) as CivilDate;
     const membership = FamilyMembership.create(
       {
         personId: input.personId,

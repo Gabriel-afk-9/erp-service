@@ -179,10 +179,13 @@ export function AttendancePage() {
   }
 
   return (
-    <div className="mx-auto max-w-[960px]">
+    <div>
       <PageHeader title="Atendimentos pontuais" />
 
-      <form onSubmit={handleSubmit} className="mt-md rounded-lg border border-border bg-surface p-lg">
+      {feedback ? <Alert tone="info" message={feedback} /> : null}
+
+      <div className="mt-md grid grid-cols-1 items-start gap-md xl:grid-cols-12">
+      <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-surface p-lg xl:col-span-5">
         <h3 className="font-display text-lg font-semibold text-text-strong">Registrar atendimento</h3>
         <div className="mt-sm grid gap-md">
           <SearchSelect
@@ -315,9 +318,7 @@ export function AttendancePage() {
         </div>
       </form>
 
-      {feedback ? <Alert tone="info" message={feedback} /> : null}
-
-      <div className="mt-lg rounded-lg border border-border bg-surface p-lg">
+      <div className="rounded-lg border border-border bg-surface p-lg xl:col-span-7">
         <h3 className="font-display text-lg font-semibold text-text-strong">Atendimentos da família</h3>
         <div className="mt-sm flex flex-wrap items-end gap-sm">
           <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
@@ -336,7 +337,8 @@ export function AttendancePage() {
             Buscar
           </Button>
         </div>
-        <table className="mt-md w-full font-sans text-sm text-text">
+        <div className="mt-md overflow-x-auto">
+        <table className="w-full min-w-[720px] font-sans text-sm text-text">
           <thead>
             <tr className="border-b-2 border-secondary-border bg-tableHeader text-left">
               <th className="px-md py-sm font-bold text-secondary-dark">Data</th>
@@ -383,6 +385,8 @@ export function AttendancePage() {
             ))}
           </tbody>
         </table>
+        </div>
+      </div>
       </div>
 
       <Drawer open={detail !== null} title={detail ? `Atendimento ${detail.occurredAt}` : "Atendimento"} onClose={() => setDetail(null)}>

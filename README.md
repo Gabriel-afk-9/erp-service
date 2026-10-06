@@ -12,11 +12,10 @@ ERP Social da instituição Luz da Esperança — protótipo da frente AD (Atend
 .\scripts\setup.ps1
 ```
 
-4. Suba o backend (terminal 1) e o frontend (terminal 2):
+4. Suba o backend e o frontend:
 
 ```powershell
-pnpm --dir api dev    # http://localhost:3000
-pnpm --dir web dev    # http://localhost:5173
+pnpm dev
 ```
 
 5. Abra http://localhost:5173 e teste.

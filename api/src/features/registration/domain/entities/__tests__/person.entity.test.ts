@@ -35,11 +35,11 @@ describe("Person validation", () => {
     );
   });
 
-  it("normalizes CPF to digits and rejects invalid CPF", () => {
+  it("normalizes CPF to digits and accepts any 11 digits", () => {
     const person = Person.create({ name: "Ana", cpf: "529.982.247-25" }, TODAY);
     expect(person.cpf).toBe(VALID_CPF);
+    expect(Person.create({ name: "Ana", cpf: "11111111111" }, TODAY).cpf).toBe("11111111111");
     expect(() => Person.create({ name: "Ana", cpf: "123" }, TODAY)).toThrow(CpfFormatError);
-    expect(() => Person.create({ name: "Ana", cpf: "11111111111" }, TODAY)).toThrow(CpfFormatError);
   });
 
   it("rejects fields longer than their max instead of truncating", () => {

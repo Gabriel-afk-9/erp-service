@@ -1,17 +1,18 @@
 import { Link } from "react-router-dom";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
 
 export function ReportsPage() {
   return (
     <div>
-      <h2 className="text-xl font-bold">Relatórios</h2>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Link to="/reports/stock" className="rounded bg-white p-4 shadow">
-          <h3 className="font-bold">Movimentação de estoque (REL-05)</h3>
-          <p className="text-sm text-gray-600">Entradas, saídas e saldos por período, item e categoria.</p>
+      <PageHeader title="Relatórios" />
+      <div className="mt-md grid gap-md md:grid-cols-2">
+        <Link to="/reports/stock" className="rounded-lg border border-border bg-surface p-md hover:bg-background">
+          <h3 className="font-display text-lg font-semibold text-text-strong">Movimentação de estoque</h3>
+          <p className="mt-xs font-sans text-sm text-text-muted">Entradas, saídas e saldos por período, item e categoria.</p>
         </Link>
-        <Link to="/reports/deliveries" className="rounded bg-white p-4 shadow">
-          <h3 className="font-bold">Entregas por família (REL-06)</h3>
-          <p className="text-sm text-gray-600">Quem recebeu o quê, quando e em que quantidade.</p>
+        <Link to="/reports/deliveries" className="rounded-lg border border-border bg-surface p-md hover:bg-background">
+          <h3 className="font-display text-lg font-semibold text-text-strong">Entregas por família</h3>
+          <p className="mt-xs font-sans text-sm text-text-muted">Quem recebeu o quê, quando e em que quantidade.</p>
         </Link>
       </div>
     </div>

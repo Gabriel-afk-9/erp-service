@@ -12,10 +12,11 @@ interface SearchSelectProps {
   onSearch: (query: string) => Promise<SearchOption[]>;
   onSelect: (id: string) => void;
   selectedLabel?: string;
+  onClear?: () => void;
   disabled?: boolean;
 }
 
-export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedLabel, disabled }: SearchSelectProps) {
+export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedLabel, onClear, disabled }: SearchSelectProps) {
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<SearchOption[]>([]);
   const [open, setOpen] = useState(false);
@@ -68,39 +69,63 @@ export function SearchSelect({ label, placeholder, onSearch, onSelect, selectedL
     setOpen(false);
   }
 
+  function handleClear(): void {
+    setQuery("");
+    setOptions([]);
+    setOpen(false);
+    onClear?.();
+  }
+
+  const showClear = selectedLabel !== undefined && onClear !== undefined && !disabled;
+
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm">
+      <label className="block font-sans text-sm font-semibold text-text">
         {label}
-        <input
-          className="mt-1 w-full rounded border px-2 py-1"
-          placeholder={placeholder}
-          value={selectedLabel ?? query}
-          disabled={disabled}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => {
-            if (options.length > 0) setOpen(true);
-          }}
-        />
+        <span className="relative mt-xs block">
+          <input
+            className={`field-input font-normal ${showClear ? "pr-10" : ""}`}
+            placeholder={placeholder}
+            value={selectedLabel ?? query}
+            disabled={disabled}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => {
+              if (options.length > 0) setOpen(true);
+            }}
+          />
+          {showClear ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              aria-label="Limpar seleção"
+              title="Limpar seleção"
+              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-text-muted hover:bg-background hover:text-text-strong"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                close
+              </span>
+            </button>
+          ) : null}
+        </span>
       </label>
       {open ? (
-        <ul className="absolute z-10 max-h-48 w-full overflow-auto rounded border bg-white shadow">
+        <ul className="absolute z-10 max-h-48 w-full overflow-auto rounded-md border border-border bg-surface shadow-[0_4px_16px_-2px_rgba(92,75,50,0.08)]">
           {loading ? (
-            <li className="px-2 py-1 text-sm text-gray-500">Buscando...</li>
+            <li className="px-md py-sm font-sans text-sm text-text-muted">Buscando...</li>
           ) : error ? (
-            <li className="px-2 py-1 text-sm text-red-700">{error}</li>
+            <li className="px-md py-sm font-sans text-sm text-aptIneligibleText">{error}</li>
           ) : options.length === 0 ? (
-            <li className="px-2 py-1 text-sm text-gray-500">Nenhum resultado</li>
+            <li className="px-md py-sm font-sans text-sm text-text-muted">Nenhum resultado</li>
           ) : (
             options.map((option) => (
               <li key={option.id}>
                 <button
                   type="button"
-                  className="block w-full px-2 py-1 text-left text-sm hover:bg-gray-100"
+                  className="block w-full px-md py-sm text-left font-sans text-sm hover:bg-background"
                   onClick={() => handleSelect(option)}
                 >
-                  <span className="font-medium">{option.label}</span>
-                  {option.sublabel ? <span className="ml-2 text-gray-500">{option.sublabel}</span> : null}
+                  <span className="font-semibold text-text-strong">{option.label}</span>
+                  {option.sublabel ? <span className="ml-sm font-mono text-xs text-text-muted">{option.sublabel}</span> : null}
                 </button>
               </li>
             ))

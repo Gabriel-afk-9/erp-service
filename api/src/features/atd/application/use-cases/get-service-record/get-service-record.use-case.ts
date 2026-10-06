@@ -24,6 +24,7 @@ export class GetServiceRecordUseCase {
       recordedAt: record.recordedAt,
       recordedBy: record.recordedBy,
       note: record.note,
+      cancelReason: record.cancelReason,
       status: record.status,
       revision: record.revision,
       homeVisit: homeVisit === null ? null : { observedSituation: homeVisit.observedSituation },

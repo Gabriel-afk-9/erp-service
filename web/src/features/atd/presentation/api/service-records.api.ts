@@ -17,6 +17,7 @@ export interface ServiceRecordItem {
   recordedAt: string;
   recordedBy: string;
   note: string | null;
+  cancelReason: string | null;
   status: "COMPLETED" | "CANCELED";
   revision: number;
   hasHomeVisit: boolean;
@@ -80,13 +81,26 @@ export async function correctServiceRecordNote(
   }
 }
 
-export async function listActivities(): Promise<{ activityId: string; name: string; serviceTypeName: string }[]> {
+export interface ActivityOption {
+  activityId: string;
+  name: string;
+  serviceTypeName: string;
+  serviceTypeCode: string;
+}
+
+// Shows "Name (Type)" only when they differ; otherwise the bare name.
+export function formatActivityLabel(activity: { name: string; serviceTypeName: string }): string {
+  if (activity.name.trim() === activity.serviceTypeName.trim()) return activity.name;
+  return `${activity.name} (${activity.serviceTypeName})`;
+}
+
+export async function listActivities(): Promise<ActivityOption[]> {
   const result = (await get("/activities?nature=ONE_OFF")) as Envelope;
-  const data = result.data as { activities?: { activityId: string; name: string; serviceType: { name: string } }[] } | undefined;
+  const data = result.data as { activities?: { activityId: string; name: string; serviceType: { code: string; name: string } }[] } | undefined;
   if (!data || !Array.isArray(data.activities)) {
     throw new Error(readApiError(result));
   }
-  return data.activities.map((activity) => ({ activityId: activity.activityId, name: activity.name, serviceTypeName: activity.serviceType.name }));
+  return data.activities.map((activity) => ({ activityId: activity.activityId, name: activity.name, serviceTypeName: activity.serviceType.name, serviceTypeCode: activity.serviceType.code }));
 }
 
 export async function cancelServiceRecord(

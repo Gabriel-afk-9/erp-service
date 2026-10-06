@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConfirmModal } from "../../../../shared/presentation/components/ConfirmModal.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
+import { StatusTag } from "../../../../shared/presentation/components/StatusTag.js";
 import { SearchSelect } from "../../../../shared/presentation/components/SearchSelect.js";
 import { getFamily, searchFamilies } from "../../../registration/presentation/api/families.api.js";
 import { listDeliveries, reverseDelivery, type DeliveryListItem } from "../api/deliveries.api.js";
@@ -61,14 +65,17 @@ export function DeliveriesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Entregas</h2>
-        <Link to="/deliveries/new" className="rounded bg-gray-800 px-4 py-2 text-sm text-white">
-          + Nova entrega
-        </Link>
-      </div>
-      <div className="mt-4 flex gap-2">
-        <div className="w-full">
+      <PageHeader
+        title="Entregas às famílias"
+        actions={
+          <Link to="/deliveries/new">
+            <Button variant="primary">Nova entrega</Button>
+          </Link>
+        }
+      />
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
+        <div className="flex items-end gap-sm">
+          <div className="min-w-0 flex-1">
           <SearchSelect
             label=""
             placeholder="Filtrar por família (opcional)"
@@ -91,32 +98,34 @@ export function DeliveriesPage() {
             }}
           />
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => { setFamilyId(""); setFamilyLabel(undefined); void load(); }}
-          className="rounded bg-gray-200 px-4 py-2"
           disabled={loading}
         >
           Limpar
-        </button>
+        </Button>
+        </div>
       </div>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 rounded bg-white p-4 shadow">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left"><th className="pr-2">Data</th><th className="pr-2">Família</th><th className="pr-2">Status</th><th>Ações</th></tr></thead>
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
+        <table className="w-full font-sans text-sm text-text">
+          <thead><tr className="border-b-2 border-secondary-border bg-tableHeader text-left"><th className="px-md py-sm font-bold text-secondary-dark">Data</th><th className="px-md py-sm font-bold text-secondary-dark">Família</th><th className="px-md py-sm font-bold text-secondary-dark">Status</th><th className="px-md py-sm font-bold text-secondary-dark">Ações</th></tr></thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.deliveryId} className="border-t">
-                <td className="pr-2">{item.occurredAt.slice(0, 10)}</td>
-                <td className="pr-2">{familyNames[item.familyId] ?? item.familyId}</td>
-                <td className="pr-2">{item.status === "COMPLETED" ? "Concluída" : "Estornada"}</td>
-                <td className="flex gap-2">
-                  <Link to={`/deliveries/${item.deliveryId}`} className="text-blue-700 underline">Ver</Link>
-                  {item.status === "COMPLETED" ? <button type="button" onClick={() => setReverseTarget(item)} className="text-red-700 underline">Estornar</button> : null}
+              <tr key={item.deliveryId} className="border-b border-border">
+                <td className="px-md py-sm font-mono text-xs">{item.occurredAt.slice(0, 10)}</td>
+                <td className="px-md py-sm">{familyNames[item.familyId] ?? item.familyId}</td>
+                <td className="px-md py-sm">{item.status === "COMPLETED" ? <StatusTag tone="neutral" icon="check_circle" label="Concluída" /> : <StatusTag tone="pending" icon="history" label="Estornada" />}</td>
+                <td className="px-md py-sm">
+                  <div className="flex gap-sm">
+                    <Link to={`/deliveries/${item.deliveryId}`} className="font-sans text-sm font-semibold text-primary-action underline">Ver</Link>
+                    {item.status === "COMPLETED" ? <button type="button" onClick={() => setReverseTarget(item)} className="font-sans text-sm font-semibold text-aptIneligibleText underline">Estornar</button> : null}
+                  </div>
                 </td>
               </tr>
             ))}
-            {items.length === 0 && !loading ? <tr><td colSpan={4} className="py-4 text-center text-gray-500">Nenhuma entrega encontrada</td></tr> : null}
+            {items.length === 0 && !loading ? <tr><td colSpan={4}><div className="py-md text-center font-sans text-sm text-text-muted">Nenhuma entrega encontrada</div></td></tr> : null}
           </tbody>
         </table>
       </div>

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConfirmModal } from "../../../../shared/presentation/components/ConfirmModal.js";
+import { Alert } from "../../../../shared/presentation/components/Alert.js";
+import { Button } from "../../../../shared/presentation/components/Button.js";
 import { DataTable } from "../../../../shared/presentation/components/DataTable.js";
+import { PageHeader } from "../../../../shared/presentation/components/PageHeader.js";
+import { StatusTag } from "../../../../shared/presentation/components/StatusTag.js";
 import { adjustStock, getItemBalance, listBalances, listCategories, type BalanceRow } from "../api/inventory.api.js";
 
 function newOperationKey(): string {
@@ -85,29 +89,36 @@ export function BalancePage() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold">Saldo geral</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 flex flex-wrap gap-2 rounded bg-white p-4 shadow">
-        <input className="rounded border px-3 py-2 text-sm" placeholder="Buscar por nome" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void load(); }} />
-        <select className="rounded border px-3 py-2 text-sm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          <option value="">Todas as categorias</option>
-          {categories.map((category) => <option key={category.categoryId} value={category.categoryId}>{category.name}</option>)}
-        </select>
-        <button type="button" onClick={() => void load()} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>Buscar</button>
+      <PageHeader title="Saldo do estoque social" />
+      <p className="mt-xs font-sans text-sm text-text-muted">Físico nunca negativo; disponível exclui lotes vencidos.</p>
+      {feedback ? <Alert tone="error" message={feedback} /> : null}
+      <div className="mt-md flex flex-wrap items-end gap-sm rounded-lg border border-border bg-surface p-md">
+        <label className="flex min-w-0 flex-1 flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Buscar
+          <input className="field-input font-normal" placeholder="Buscar por nome" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void load(); }} />
+        </label>
+        <label className="flex flex-col gap-xs font-sans text-sm font-semibold text-text">
+          Categoria
+          <select className="field-input w-auto font-normal" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <option value="">Todas as categorias</option>
+            {categories.map((category) => <option key={category.categoryId} value={category.categoryId}>{category.name}</option>)}
+          </select>
+        </label>
+        <Button type="button" onClick={() => void load()} disabled={loading}>Buscar</Button>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-md rounded-lg border border-border bg-surface p-md">
         <DataTable
           columns={[
             { key: "name", label: "Item" },
             { key: "categoryName", label: "Categoria" },
-            { key: "onHand", label: "Em mãos", render: (row) => `${(row as BalanceRow).onHand} ${(row as BalanceRow).unitSymbol}` },
-            { key: "available", label: "Disponível", render: (row) => `${(row as BalanceRow).available} ${(row as BalanceRow).unitSymbol}` },
+            { key: "onHand", label: "Em mãos", render: (row) => <span className="font-mono">{`${(row as BalanceRow).onHand} ${(row as BalanceRow).unitSymbol}`}</span> },
+            { key: "available", label: "Disponível", render: (row) => <span className="font-mono font-semibold">{`${(row as BalanceRow).available} ${(row as BalanceRow).unitSymbol}`}</span> },
             {
               key: "alert",
               label: "Alerta",
               render: (row) =>
                 expiringIds.has((row as BalanceRow).itemId) ? (
-                  <span title="Lotes próximos do vencimento">📅</span>
+                  <StatusTag tone="ineligible" icon="event_busy" label="Vencimento próximo" />
                 ) : (
                   "—"
                 ),
@@ -117,8 +128,8 @@ export function BalancePage() {
               label: "Ações",
               render: (row) => (
                 <span className="flex gap-2">
-                  <Link to={`/inventory/items/${(row as BalanceRow).itemId}/movements`} className="text-blue-700 underline">Movimentos</Link>
-                  <button type="button" onClick={() => setAdjustTarget(row as BalanceRow)} className="text-blue-700 underline">Ajuste</button>
+                  <Link to={`/inventory/items/${(row as BalanceRow).itemId}/movements`} className="text-primary-action underline">Movimentos</Link>
+                  <button type="button" onClick={() => setAdjustTarget(row as BalanceRow)} className="text-primary-action underline">Ajuste</button>
                 </span>
               ),
             },

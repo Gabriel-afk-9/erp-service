@@ -137,6 +137,7 @@ export class PrismaDeliveryRepository implements DeliveryRepository {
                 recordedAt: new Date(record.recordedAt),
                 recordedBy: record.recordedBy,
                 note: record.note,
+                cancelReason: record.cancelReason,
                 status: record.status,
                 revision: record.revision,
               },

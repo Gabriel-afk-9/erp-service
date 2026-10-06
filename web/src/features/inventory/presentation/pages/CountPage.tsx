@@ -99,27 +99,34 @@ export function CountPage() {
   return (
     <div>
       <h2 className="text-xl font-bold">Contagem física</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
       {result ? <p className="mt-3 text-sm text-green-700">{result}</p> : null}
 
       {countId === null ? (
-        <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
+        <div className="mt-4 grid gap-2 rounded-lg border border-border bg-surface p-md">
           <h3 className="font-semibold">Etapa 1 — Abrir contagem</h3>
           <label className="block text-sm">Nota (opcional)
             <textarea className="mt-1 w-full rounded border px-2 py-1" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
           </label>
-          <button type="button" onClick={() => void handleOpen()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
+          <button type="button" onClick={() => void handleOpen()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading}>
             Iniciar contagem
           </button>
         </div>
       ) : (
         <>
-          <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
+          <div className="mt-4 grid gap-2 rounded-lg border border-border bg-surface p-md">
             <h3 className="font-semibold">Etapa 2 — Registrar linhas</h3>
             <SearchSelect
               label="Item"
               placeholder="Digite ao menos 2 letras..."
               selectedLabel={itemName || undefined}
+              onClear={() => {
+                setItemId("");
+                setItemName("");
+                setUnitId("");
+                setLotId("");
+                setLotOptions([]);
+              }}
               onSearch={async (query) => {
                 const result = await listItems({ q: query });
                 return result.items.map((item) => ({ id: item.itemId, label: item.name, sublabel: item.unitSymbol }));
@@ -140,12 +147,12 @@ export function CountPage() {
             <label className="block text-sm">Validade (material sem lote)
               <input type="date" className="mt-1 w-full rounded border px-2 py-1" value={expiresOn} onChange={(e) => setExpiresOn(e.target.value)} />
             </label>
-            <button type="button" onClick={() => void handleRecordLine()} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading || !itemId}>
+            <button type="button" onClick={() => void handleRecordLine()} className="rounded bg-background border border-border px-4 py-2 text-sm" disabled={loading || !itemId}>
               + Registrar item
             </button>
           </div>
 
-          <div className="mt-4 rounded bg-white p-4 shadow">
+          <div className="mt-4 rounded-lg border border-border bg-surface p-md">
             <h3 className="font-semibold">Linhas registradas</h3>
             <table className="mt-2 w-full text-sm">
               <thead><tr className="text-left"><th className="pr-2">Item</th><th className="pr-2">Esperado</th><th className="pr-2">Contado</th><th>Variância</th></tr></thead>
@@ -158,15 +165,15 @@ export function CountPage() {
                     <td>{line.variance > 0 ? `+${line.variance}` : line.variance}</td>
                   </tr>
                 ))}
-                {lines.length === 0 ? <tr><td colSpan={4} className="py-4 text-center text-gray-500">Nenhuma linha registrada</td></tr> : null}
+                {lines.length === 0 ? <tr><td colSpan={4} className="py-4 text-center text-text-muted">Nenhuma linha registrada</td></tr> : null}
               </tbody>
             </table>
           </div>
 
-          <div className="mt-4 rounded bg-white p-4 shadow">
+          <div className="mt-4 rounded-lg border border-border bg-surface p-md">
             <h3 className="font-semibold">Etapa 3 — Fechar</h3>
-            <p className="text-sm text-gray-600">Esta ação irá gerar ajustes automáticos de estoque.</p>
-            <button type="button" onClick={() => setConfirmClose(true)} className="mt-2 rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading || lines.length === 0 || result !== null}>
+            <p className="text-sm text-text-muted">Esta ação irá gerar ajustes automáticos de estoque.</p>
+            <button type="button" onClick={() => setConfirmClose(true)} className="mt-2 rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading || lines.length === 0 || result !== null}>
               Fechar contagem
             </button>
           </div>
@@ -180,7 +187,7 @@ export function CountPage() {
           />
         </>
       )}
-      <Link to="/inventory/items" className="mt-4 inline-block text-sm text-blue-700 underline">← Catálogo</Link>
+      <Link to="/inventory/items" className="mt-4 inline-block text-sm text-primary-action underline">← Catálogo</Link>
     </div>
   );
 }

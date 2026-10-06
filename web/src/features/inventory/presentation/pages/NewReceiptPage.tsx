@@ -98,10 +98,10 @@ export function NewReceiptPage() {
 
   return (
     <div>
-      <Link to="/inventory/receipts" className="text-sm text-blue-700 underline">← Recebimentos</Link>
+      <Link to="/inventory/receipts" className="text-sm text-primary-action underline">← Recebimentos</Link>
       <h2 className="mt-2 text-xl font-bold">Registrar recebimento</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 grid gap-2 rounded-lg border border-border bg-surface p-md">
         <label className="block text-sm">Origem
           <select className="mt-1 w-full rounded border px-2 py-1" value={originType} onChange={(e) => setOriginType(e.target.value)}>
             {ORIGIN_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
@@ -117,7 +117,7 @@ export function NewReceiptPage() {
           <textarea className="mt-1 w-full rounded border px-2 py-1" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
         </label>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <h3 className="mb-2 font-semibold">Linhas</h3>
         <DynamicLines
           lines={lines}
@@ -130,6 +130,7 @@ export function NewReceiptPage() {
                 label="Item"
                 placeholder="Digite ao menos 2 letras..."
                 selectedLabel={line.itemName || undefined}
+                onClear={() => onChange({ ...line, itemId: "", itemName: "", requiresExpiration: false, unitSymbol: "" })}
                 onSearch={async (query) => {
                   const result = await listItems({ q: query });
                   return result.items.map((item) => ({ id: item.itemId, label: item.name, sublabel: item.unitSymbol }));
@@ -165,11 +166,11 @@ export function NewReceiptPage() {
                   <input type="date" className="mt-1 w-full rounded border px-2 py-1" value={line.expiresOn} onChange={(e) => onChange({ ...line, expiresOn: e.target.value })} />
                 </label>
               ) : null}
-              {lineError(line) ? <p className="text-sm text-orange-700">⚠️ {lineError(line)}</p> : null}
+              {lineError(line) ? <p className="text-sm text-aptPendingText">⚠️ {lineError(line)}</p> : null}
             </div>
           )}
         />
-        <button type="button" onClick={() => void handleSubmit()} className="mt-3 rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
+        <button type="button" onClick={() => void handleSubmit()} className="mt-3 rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading}>
           Confirmar recebimento
         </button>
       </div>

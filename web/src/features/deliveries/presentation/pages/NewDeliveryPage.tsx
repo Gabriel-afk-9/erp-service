@@ -91,12 +91,18 @@ export function NewDeliveryPage() {
   return (
     <div>
       <h2 className="text-xl font-bold">Nova entrega</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 grid gap-2 rounded-lg border border-border bg-surface p-md">
         <SearchSelect
           label="Família"
           placeholder="Digite ao menos 2 letras do nome ou código..."
           selectedLabel={familyLabel}
+          onClear={() => {
+            setFamilyId("");
+            setFamilyLabel(undefined);
+            setEligibility(null);
+            setLots([]);
+          }}
           onSearch={async (query) => {
             const result = await searchFamilies({ q: query });
             return result.items.map((item) => ({ id: item.familyId, label: item.referenceName ?? "Sem nome", sublabel: item.code }));
@@ -114,7 +120,7 @@ export function NewDeliveryPage() {
           }}
         />
         <input type="date" className="rounded border px-3 py-2 text-sm" value={date} onChange={(e) => setDate(e.target.value)} />
-        <button type="button" onClick={() => void handlePreview()} className="rounded bg-gray-200 px-4 py-2 text-sm" disabled={loading}>
+        <button type="button" onClick={() => void handlePreview()} className="rounded bg-background border border-border px-4 py-2 text-sm" disabled={loading}>
           Consultar aptidão e saldo
         </button>
         {eligibility ? (
@@ -133,7 +139,7 @@ export function NewDeliveryPage() {
         <input className="rounded border px-3 py-2 text-sm" placeholder="Executor (função)" value={executorRole} onChange={(e) => setExecutorRole(e.target.value)} />
         <input className="rounded border px-3 py-2 text-sm" placeholder="Justificativa (mín. 3 letras)" value={exceptionReason} onChange={(e) => setExceptionReason(e.target.value)} />
         <input className="rounded border px-3 py-2 text-sm" placeholder="Autorizado por (obrigatório)" value={authorizedBy} onChange={(e) => setAuthorizedBy(e.target.value)} />
-        <button type="button" onClick={() => void handleConfirm()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>
+        <button type="button" onClick={() => void handleConfirm()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading}>
           Confirmar entrega
         </button>
       </div>

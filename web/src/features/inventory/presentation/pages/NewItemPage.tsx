@@ -47,8 +47,8 @@ export function NewItemPage() {
   return (
     <div>
       <h2 className="text-xl font-bold">Novo item</h2>
-      {feedback ? <p className="mt-3 text-sm text-red-700">{feedback}</p> : null}
-      <div className="mt-4 grid gap-2 rounded bg-white p-4 shadow">
+      {feedback ? <p className="mt-3 text-sm text-aptIneligibleText">{feedback}</p> : null}
+      <div className="mt-4 grid gap-2 rounded-lg border border-border bg-surface p-md">
         <select className="rounded border px-3 py-2 text-sm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
           <option value="">Selecione a categoria</option>
           {categories.map((cat) => <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>)}
@@ -64,7 +64,7 @@ export function NewItemPage() {
           <label className="mr-4 flex items-center gap-1"><input type="radio" name="exp" checked={requiresExpiration === true} onChange={() => setRequiresExpiration(true)} /> Sim</label>
           <label className="flex items-center gap-1"><input type="radio" name="exp" checked={requiresExpiration === false} onChange={() => setRequiresExpiration(false)} /> Não</label>
         </fieldset>
-        <button type="button" onClick={() => void handleSubmit()} className="rounded bg-gray-800 px-4 py-2 text-sm text-white" disabled={loading}>Criar item</button>
+        <button type="button" onClick={() => void handleSubmit()} className="rounded bg-primary-action px-4 py-2 text-sm text-white" disabled={loading}>Criar item</button>
       </div>
     </div>
   );

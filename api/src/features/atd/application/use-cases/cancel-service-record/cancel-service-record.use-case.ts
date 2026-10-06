@@ -31,7 +31,7 @@ export class CancelServiceRecordUseCase {
       throw new ConcurrentModificationError(input.expectedRevision, record.revision);
     }
     const before = { status: record.status, revision: record.revision };
-    record.cancel();
+    record.cancel(input.reason.trim());
     await this.repository.save(record, found.homeVisit, {
       operation: "CANCELED",
       performedBy: input.performedBy,

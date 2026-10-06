@@ -32,14 +32,14 @@ export function DeliveryDetailPage() {
     void load();
   }, [id]);
 
-  if (loading) return <p className="text-sm text-gray-600">Carregando...</p>;
-  if (!detail) return <p className="text-sm text-red-700">{feedback ?? "Entrega não encontrada"}</p>;
+  if (loading) return <p className="text-sm text-text-muted">Carregando...</p>;
+  if (!detail) return <p className="text-sm text-aptIneligibleText">{feedback ?? "Entrega não encontrada"}</p>;
 
   return (
     <div>
-      <Link to="/deliveries" className="text-sm text-blue-700 underline">← Voltar para entregas</Link>
+      <Link to="/deliveries" className="text-sm text-primary-action underline">← Voltar para entregas</Link>
       <h2 className="mt-2 text-xl font-bold">Entrega {detail.occurredAt.slice(0, 10)}</h2>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <dl className="grid gap-2 text-sm">
           <div><dt className="font-bold">Família</dt><dd>{familyName ?? detail.familyId}</dd></div>
           <div><dt className="font-bold">Status</dt><dd>{detail.status === "COMPLETED" ? "Concluída" : "Estornada"}</dd></div>
@@ -51,7 +51,7 @@ export function DeliveryDetailPage() {
           {detail.reversal ? <div><dt className="font-bold">Estorno</dt><dd>{detail.reversal.reason}</dd></div> : null}
         </dl>
       </div>
-      <div className="mt-4 rounded bg-white p-4 shadow">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-md">
         <h3 className="font-bold">Itens</h3>
         <ul className="mt-2 grid gap-2 text-sm">
           {detail.lines.map((line) => (

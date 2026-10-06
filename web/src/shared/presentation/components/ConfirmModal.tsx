@@ -34,22 +34,22 @@ export function ConfirmModal({ open, title, description, fields, onConfirm, onCa
   });
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-      <div className="w-96 rounded bg-white p-4 shadow">
-        <h3 className="mb-2 font-semibold">{title}</h3>
-        {description ? <p className="mb-2 text-sm text-gray-600">{description}</p> : null}
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-strong/40 backdrop-blur-[4px]">
+      <div className="w-full max-w-[480px] rounded-lg border border-secondary-border bg-surface p-lg shadow-[0_12px_32px_-4px_rgba(60,48,30,0.12)]">
+        <h3 className="mb-sm font-display text-lg font-semibold text-text-strong">{title}</h3>
+        {description ? <p className="mb-sm font-sans text-sm text-text-muted">{description}</p> : null}
         {(fields ?? []).map((field) => (
-          <label key={field.name} className="mb-2 block text-sm">
+          <label key={field.name} className="mb-sm block font-sans text-sm font-semibold text-text">
             {field.label}
             {field.type === "textarea" ? (
               <textarea
-                className="mt-1 w-full rounded border px-2 py-1"
+                className="field-input mt-xs h-auto min-h-[88px] py-sm font-normal"
                 value={values[field.name] ?? field.defaultValue ?? ""}
                 onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
               />
             ) : field.type === "select" ? (
               <select
-                className="mt-1 w-full rounded border px-2 py-1"
+                className="field-input mt-xs font-normal"
                 value={values[field.name] ?? field.defaultValue ?? field.options?.[0] ?? ""}
                 onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
               >
@@ -59,14 +59,14 @@ export function ConfirmModal({ open, title, description, fields, onConfirm, onCa
               </select>
             ) : (
               <input
-                className="mt-1 w-full rounded border px-2 py-1"
+                className="field-input mt-xs font-normal"
                 value={values[field.name] ?? field.defaultValue ?? ""}
                 onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
               />
             )}
           </label>
         ))}
-        <div className="mt-3 flex gap-2">
+        <div className="mt-md flex gap-sm">
           <button
             type="button"
             disabled={invalid}
@@ -78,7 +78,7 @@ export function ConfirmModal({ open, title, description, fields, onConfirm, onCa
               setValues({});
               onConfirm(merged);
             }}
-            className={`rounded px-4 py-2 text-white ${danger ? "bg-red-700" : "bg-gray-800"}`}
+            className={`inline-flex h-[40px] items-center rounded-md px-md font-sans text-sm font-semibold text-white ${danger ? "bg-coral hover:opacity-90" : "bg-primary-action hover:bg-primary-pressed"}`}
           >
             {confirmLabel ?? "Confirmar"}
           </button>
@@ -88,7 +88,7 @@ export function ConfirmModal({ open, title, description, fields, onConfirm, onCa
               setValues({});
               onCancel();
             }}
-            className="rounded bg-gray-200 px-4 py-2"
+            className="inline-flex h-[40px] items-center rounded-md border border-border bg-surface px-md font-sans text-sm font-semibold text-text-strong hover:bg-background"
           >
             Voltar
           </button>

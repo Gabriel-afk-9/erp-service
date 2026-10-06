@@ -16,6 +16,7 @@ export interface GetServiceRecordOutput {
   recordedAt: string;
   recordedBy: string;
   note: string | null;
+  cancelReason: string | null;
   status: ServiceRecordStatus;
   revision: number;
   homeVisit: ServiceRecordHomeVisitOutput | null;

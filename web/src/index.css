@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-text;
+  }
+  h1,
+  h2 {
+    @apply font-display text-text-strong;
+  }
+  :focus-visible {
+    outline: 2px solid #2f6f9f;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .field-input {
+    @apply h-[44px] w-full rounded-md border border-border bg-surface px-3.5 text-text shadow-sm placeholder:text-text-muted;
+  }
+  .field-input:focus {
+    @apply border-primary bg-surface;
+  }
+}
